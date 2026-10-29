@@ -19,7 +19,7 @@
     {
       "login": "Zonov",
       "role": "naladchik",
-      "full_name": "Зонов А.В.",
+      "full_name": "Зонов Ф.А.",
       "salt": "4257a30e5ec2cf72",
       "hash": "1412e4c0b912cf6078ff059ec283d5e8f76f5f187909a2d80c270fe92f095614",
       "active": true
@@ -27,7 +27,7 @@
     {
       "login": "Gribov",
       "role": "naladchik",
-      "full_name": "Грибов С.А.",
+      "full_name": "Грибов Е.А.",
       "salt": "8f5c3cb5f5b42d66",
       "hash": "b5c4b441d4799a4902cbc297de92e1b98f7c0a9321a9999085520631bc7a0bf7",
       "active": true
@@ -35,7 +35,7 @@
     {
       "login": "Troshin",
       "role": "naladchik",
-      "full_name": "Трошин В.Н.",
+      "full_name": "Трошин С.С.",
       "salt": "c1d30b9b8715c853",
       "hash": "5106ef2c4813d02651db6b2d4ffbfdd9f38c1ec321e4812a6b2db387826d3cfa",
       "active": true
@@ -43,7 +43,7 @@
     {
       "login": "Tihonov",
       "role": "naladchik",
-      "full_name": "Тихонов Д.А.",
+      "full_name": "Тихонов М.А.",
       "salt": "efdfe5b5f504b112",
       "hash": "3700378a2584e7592fe4905fcc44b8bb440c8d54bd8c67bed2854aa7825f95bd",
       "active": true
@@ -51,7 +51,7 @@
     {
       "login": "Karpov",
       "role": "naladchik",
-      "full_name": "Карпов Ю.М.",
+      "full_name": "Карпов Ю.Н.",
       "salt": "349227e4837e1efa",
       "hash": "b54c8f9b69dff3d23d052dccd684f8ba169fc3897a04d433ab8a0583f7c68601",
       "active": true
