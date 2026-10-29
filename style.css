@@ -1,0 +1,120 @@
+/* RifeyGit — статическая версия (GitHub Pages) */
+:root {
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --ink: #1b2733;
+  --muted: #61707e;
+  --accent: #1867c0;
+  --accent-ink: #ffffff;
+  --ok: #1a7f4b;
+  --err: #b3261e;
+  --line: #dde3e9;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+.screen { max-width: 980px; margin: 0 auto; padding: 12px; }
+
+/* — вход — */
+.login-card {
+  margin: 8vh auto 0; max-width: 380px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 12px; padding: 24px;
+}
+.login-card h1 { margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+
+/* — шапка — */
+.topbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 8px 12px; margin-bottom: 12px;
+}
+.brand { font-weight: 700; }
+#tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab {
+  border: 0; background: transparent; padding: 8px 12px; border-radius: 8px;
+  font-size: 15px; cursor: pointer; color: var(--muted);
+}
+.tab.active { background: var(--accent); color: var(--accent-ink); }
+.who { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+
+/* — карточки и формы — */
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+h2 { font-size: 19px; margin: 4px 0 10px; }
+h3 { font-size: 16px; margin: 4px 0 10px; }
+.section { margin-top: 20px; }
+.hint { color: var(--muted); font-size: 14px; }
+.error { color: var(--err); }
+.ok { color: var(--ok); }
+
+label { display: block; margin: 8px 0; font-size: 14px; color: var(--muted); }
+input, select, textarea {
+  width: 100%; padding: 10px; margin-top: 4px; font-size: 16px;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink);
+}
+textarea { font-family: inherit; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+button, .btn {
+  font: inherit; cursor: pointer; border: 1px solid var(--line);
+  background: var(--card); border-radius: 8px; padding: 10px 14px;
+  text-decoration: none; color: var(--ink); display: inline-block;
+}
+button.primary, .primary.btn {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+}
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+button.wide { width: 100%; margin-top: 8px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.row-between { display: flex; gap: 8px; margin-bottom: 10px; }
+.grow { flex: 1; }
+.pw-wrap { position: relative; display: block; }
+.pw-wrap .eye {
+  position: absolute; right: 6px; top: 6px; border: 0; background: none; padding: 6px;
+}
+
+/* — программы — */
+.pg {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px; margin-bottom: 10px;
+}
+.pg-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pg-code { font-weight: 700; font-size: 17px; }
+.pg-meta { color: var(--muted); font-size: 14px; }
+.ver {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border-top: 1px dashed var(--line); padding: 8px 0;
+}
+.ver-num { font-weight: 600; min-width: 70px; }
+.ver-msg { color: var(--muted); font-size: 14px; flex: 1; min-width: 120px; }
+.dl-btn {
+  background: #eef4fb; border-color: #cfe0f3; color: var(--accent);
+  padding: 6px 10px; font-size: 14px;
+}
+.dl-btn.kit { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* — таблицы — */
+table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 14px; }
+th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; }
+th { background: #eef1f4; font-weight: 600; }
+.tbl-wrap { overflow-x: auto; border-radius: 10px; }
+
+/* — подвал и диалоги — */
+.foot {
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--muted); font-size: 13px; padding: 10px 4px 24px;
+}
+dialog {
+  border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  width: min(560px, 92vw);
+}
+dialog::backdrop { background: rgba(20, 30, 40, .45); }

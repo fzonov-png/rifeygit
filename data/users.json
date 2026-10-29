@@ -1,0 +1,68 @@
+{
+  "users": [
+    {
+      "login": "admin",
+      "role": "admin",
+      "full_name": "Администратор",
+      "salt": "ce2ff8fae4ecd639",
+      "hash": "d5396333d8ac80a361a790b316e656849cacd3f846c6969cb995b5d415d0b1ca",
+      "active": true
+    },
+    {
+      "login": "engineer",
+      "role": "engineer",
+      "full_name": "Инженер-программист",
+      "salt": "903e335405501ef7",
+      "hash": "1e5d32b43910573b8b41fa7cc135cf54ced2b13eb980336cd2d0cabb89142713",
+      "active": true
+    },
+    {
+      "login": "Zonov",
+      "role": "naladchik",
+      "full_name": "Зонов А.В.",
+      "salt": "4257a30e5ec2cf72",
+      "hash": "1412e4c0b912cf6078ff059ec283d5e8f76f5f187909a2d80c270fe92f095614",
+      "active": true
+    },
+    {
+      "login": "Gribov",
+      "role": "naladchik",
+      "full_name": "Грибов С.А.",
+      "salt": "8f5c3cb5f5b42d66",
+      "hash": "b5c4b441d4799a4902cbc297de92e1b98f7c0a9321a9999085520631bc7a0bf7",
+      "active": true
+    },
+    {
+      "login": "Troshin",
+      "role": "naladchik",
+      "full_name": "Трошин В.Н.",
+      "salt": "c1d30b9b8715c853",
+      "hash": "5106ef2c4813d02651db6b2d4ffbfdd9f38c1ec321e4812a6b2db387826d3cfa",
+      "active": true
+    },
+    {
+      "login": "Tihonov",
+      "role": "naladchik",
+      "full_name": "Тихонов Д.А.",
+      "salt": "efdfe5b5f504b112",
+      "hash": "3700378a2584e7592fe4905fcc44b8bb440c8d54bd8c67bed2854aa7825f95bd",
+      "active": true
+    },
+    {
+      "login": "Karpov",
+      "role": "naladchik",
+      "full_name": "Карпов Ю.М.",
+      "salt": "349227e4837e1efa",
+      "hash": "b54c8f9b69dff3d23d052dccd684f8ba169fc3897a04d433ab8a0583f7c68601",
+      "active": true
+    },
+    {
+      "login": "naladchik",
+      "role": "naladchik",
+      "full_name": "Наладчик (общий)",
+      "salt": "6e8dd2c1d975963e",
+      "hash": "6f946e0acbee1aa11c2e257ae785a32ffe703041bf0d13a615fcf2601a43c09a",
+      "active": true
+    }
+  ]
+}

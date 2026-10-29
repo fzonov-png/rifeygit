@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RifeyGit — программы и схемы ПЛК</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ЭКРАН ВХОДА -->
+<div id="screen-login" class="screen">
+  <div class="login-card">
+    <h1>RifeyGit</h1>
+    <p class="sub">Программы ПЛК и схемы пультов бетонных заводов</p>
+    <form id="login-form" autocomplete="on">
+      <label>Логин
+        <input id="login-user" name="username" autocomplete="username" required>
+      </label>
+      <label>Пароль
+        <span class="pw-wrap">
+          <input id="login-pass" type="password" name="password" autocomplete="current-password" required>
+          <button type="button" class="eye" data-eye="login-pass" title="Показать пароль">&#128065;</button>
+        </span>
+      </label>
+      <button type="submit" class="primary wide">Войти</button>
+      <p id="login-error" class="error" hidden></p>
+    </form>
+  </div>
+</div>
+
+<!-- ОСНОВНОЙ ЭКРАН -->
+<div id="screen-app" class="screen" hidden>
+  <header class="topbar">
+    <span class="brand">RifeyGit</span>
+    <nav id="tabs">
+      <button data-tab="download" class="tab active">Скачать</button>
+      <button data-tab="programs" class="tab">Программы и схемы</button>
+      <button data-tab="equipment" class="tab">Реестр</button>
+      <button data-tab="users" class="tab" id="tab-users" hidden>Пользователи</button>
+      <button data-tab="upload" class="tab" id="tab-upload" hidden>Загрузка версий</button>
+    </nav>
+    <div class="who">
+      <span id="who-name"></span>
+      <button id="btn-logout" class="ghost" title="Выйти">&#10162;</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ВКЛАДКА «СКАЧАТЬ» -->
+    <section id="tabpanel-download" class="panel">
+      <div id="dl-guard" class="card" hidden>
+        <h2>Скачивание — заполните данные</h2>
+        <p class="hint">Обязательные поля: заводской № объекта (если известен) и назначение.
+           Заполнение подставляет данные из реестра.</p>
+        <form id="dl-form" class="grid2">
+          <label>Заводской № объекта
+            <input id="dl-factory" list="eq-list" placeholder="напр. БЗ-045">
+          </label>
+          <label>Наименование объекта
+            <input id="dl-eqname">
+          </label>
+          <label>Город
+            <input id="dl-city">
+          </label>
+          <label>Заказчик
+            <input id="dl-customer">
+          </label>
+          <label>Назначение *
+            <select id="dl-purpose" required>
+              <option value="">— выберите —</option>
+              <option>ввод в эксплуатацию</option>
+              <option>ремонт</option>
+              <option>модернизация</option>
+              <option>диагностика</option>
+              <option>прочее</option>
+            </select>
+          </label>
+          <label>Примечание
+            <input id="dl-note" placeholder="необязательно">
+          </label>
+        </form>
+        <p id="dl-ok" class="ok" hidden>&#10003; Данные заполнены — список программ ниже разблокирован.</p>
+      </div>
+      <datalist id="eq-list"></datalist>
+      <div id="dl-programs"></div>
+    </section>
+
+    <!-- ВКЛАДКА «ПРОГРАММЫ И СХЕМЫ» -->
+    <section id="tabpanel-programs" class="panel" hidden>
+      <div id="pg-programs"></div>
+      <h2 class="section">Принципиальные электрические схемы пультов</h2>
+      <div id="pg-schematics"></div>
+    </section>
+
+    <!-- ВКЛАДКА «РЕЕСТР ОБОРУДОВАНИЯ» -->
+    <section id="tabpanel-equipment" class="panel" hidden>
+      <div class="row-between">
+        <input id="eq-search" class="grow" placeholder="Поиск: заводской №, город, заказчик…">
+        <button id="eq-add" class="primary" hidden>+ Добавить</button>
+      </div>
+      <div id="eq-table"></div>
+      <form id="eq-form" class="card" hidden>
+        <h3 id="eq-form-title">Новая запись</h3>
+        <div class="grid2">
+          <label>Заводской № * <input id="ef-no" required></label>
+          <label>Наименование * <input id="ef-name" required></label>
+          <label>Пульт <input id="ef-pult" list="pult-list"></label>
+          <label>Город <input id="ef-city"></label>
+          <label>Заказчик <input id="ef-customer"></label>
+          <label>Тип завода <input id="ef-plant"></label>
+        </div>
+        <label>Примечание <input id="ef-note"></label>
+        <div class="row">
+          <button type="submit" class="primary">Сохранить в GitHub</button>
+          <button type="button" id="eq-cancel" class="ghost">Отмена</button>
+        </div>
+        <p id="eq-msg" class="hint"></p>
+      </form>
+    </section>
+
+    <!-- ВКЛАДКА «ПОЛЬЗОВАТЕЛИ» -->
+    <section id="tabpanel-users" class="panel" hidden>
+      <div id="us-list" class="card"></div>
+      <form id="us-form" class="card">
+        <h3>Новый пользователь</h3>
+        <div class="grid2">
+          <label>Логин * <input id="uf-login" required></label>
+          <label>Пароль * <input id="uf-pass" required></label>
+          <label>ФИО / подпись <input id="uf-name"></label>
+          <label>Роль
+            <select id="uf-role">
+              <option value="naladchik">Наладчик</option>
+              <option value="engineer">Инженер-программист</option>
+              <option value="admin">Администратор</option>
+            </select>
+          </label>
+        </div>
+        <button type="submit" class="primary">Создать в GitHub</button>
+        <p id="us-msg" class="hint"></p>
+      </form>
+      <p class="hint">Пароли хранятся в виде солёных хэшей SHA-256; повторная отправка формы
+        с тем же логином не удалит существующего пользователя — используйте смену пароля ниже.</p>
+      <form id="pw-form" class="card">
+        <h3>Сменить пароль</h3>
+        <div class="grid2">
+          <label>Пользователь <input id="pf-login" list="user-list"></label>
+          <label>Новый пароль <input id="pf-pass"></label>
+        </div>
+        <button type="submit" class="primary">Сменить пароль</button>
+        <p id="pf-msg" class="hint"></p>
+      </form>
+      <datalist id="user-list"></datalist>
+    </section>
+
+    <!-- ВКЛАДКА «ЗАГРУЗКА ВЕРСИЙ» (ссылка на утилиту) -->
+    <section id="tabpanel-upload" class="panel" hidden>
+      <div class="card">
+        <h2>Загрузка новых версий и схем</h2>
+        <p>Загрузка версий, схем и создание пользователей выполняется на отдельной странице-утилите
+           (нужен ваш GitHub-токен с правом записи в этот репозиторий).</p>
+        <p><a class="primary btn" href="tools/upload.html">Открыть страницу загрузки</a></p>
+        <p class="hint">После загрузки сайт на GitHub Pages обновляется сам за 1–10 минут.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="foot-updated"></span>
+    <button id="btn-report" class="ghost" hidden title="Отчёт о скачиваниях на этом устройстве">Отчёт</button>
+  </footer>
+</div>
+
+<!-- ДИАЛОГ ОТЧЁТА -->
+<dialog id="dlg-report">
+  <h3>Отчёт о скачиваниях (это устройство)</h3>
+  <textarea id="report-text" rows="10" readonly></textarea>
+  <div class="row">
+    <button id="rp-copy" class="primary">Скопировать</button>
+    <button id="rp-wa" class="ghost">WhatsApp</button>
+    <button id="rp-close" class="ghost">Закрыть</button>
+  </div>
+</dialog>
+
+<script src="gh.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
