@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -11,8 +13,21 @@
 <!-- ЭКРАН ВХОДА -->
 <div id="screen-login" class="screen">
   <div class="login-card">
-    <h1>RifeyGit</h1>
-    <p class="sub">Программы ПЛК и схемы пультов бетонных заводов</p>
+    <div class="login-head">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#lgA)"/>
+        <path d="M13 29V11h8.2c3.6 0 6 2.2 6 5.4 0 2.6-1.6 4.5-4.2 5.2L28 29h-4.3l-4.4-6.8H17V29h-4Zm4-10h3.6c1.6 0 2.6-.9 2.6-2.3 0-1.5-1-2.3-2.6-2.3H17V19Z" fill="#fff"/>
+      </svg>
+      <div>
+        <h1>RifeyGit</h1>
+        <p class="sub">Программы ПЛК и схемы пультов</p>
+      </div>
+    </div>
     <form id="login-form" autocomplete="on">
       <label>Логин
         <input id="login-user" name="username" autocomplete="username" required>
@@ -32,7 +47,18 @@
 <!-- ОСНОВНОЙ ЭКРАН -->
 <div id="screen-app" class="screen" hidden>
   <header class="topbar">
-    <span class="brand">RifeyGit</span>
+    <span class="brand">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="lgB" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#lgB)"/>
+        <path d="M13 29V11h8.2c3.6 0 6 2.2 6 5.4 0 2.6-1.6 4.5-4.2 5.2L28 29h-4.3l-4.4-6.8H17V29h-4Zm4-10h3.6c1.6 0 2.6-.9 2.6-2.3 0-1.5-1-2.3-2.6-2.3H17V19Z" fill="#fff"/>
+      </svg>
+      RifeyGit
+    </span>
     <nav id="tabs">
       <button data-tab="download" class="tab active">Скачать</button>
       <button data-tab="programs" class="tab">Программы и схемы</button>
@@ -41,6 +67,7 @@
       <button data-tab="upload" class="tab" id="tab-upload" hidden>Загрузка версий</button>
     </nav>
     <div class="who">
+      <span id="avatar" class="avatar" aria-hidden="true"></span>
       <span id="who-name"></span>
       <button id="btn-logout" class="ghost" title="Выйти">&#10162;</button>
     </div>
@@ -51,7 +78,7 @@
     <section id="tabpanel-download" class="panel">
       <div id="dl-guard" class="card" hidden>
         <h2>Скачивание — заполните данные</h2>
-        <p class="hint">Обязательные поля: заводской № объекта (если известен) и назначение.
+        <p class="hint">Обязательные поля: заводской № объекта и назначение.
            Заполнение подставляет данные из реестра.</p>
         <form id="dl-form" class="grid2">
           <label>Заводской № объекта
@@ -153,13 +180,15 @@
       <datalist id="user-list"></datalist>
     </section>
 
-    <!-- ВКЛАДКА «ЗАГРУЗКА ВЕРСИЙ» (ссылка на утилиту) -->
+    <!-- ВКЛАДКА «ЗАГРУЗКА ВЕРСИЙ» -->
     <section id="tabpanel-upload" class="panel" hidden>
       <div class="card">
         <h2>Загрузка новых версий и схем</h2>
-        <p>Загрузка версий, схем и создание пользователей выполняется на отдельной странице-утилите
-           (нужен ваш GitHub-токен с правом записи в этот репозиторий).</p>
-        <p><a class="primary btn" href="tools/upload.html">Открыть страницу загрузки</a></p>
+        <p class="hint">Загрузка версий, схем и создание пользователей выполняется на отдельной
+           странице-утилите (нужен ваш GitHub-токен с правом записи в этот репозиторий).</p>
+        <div class="row">
+          <a class="primary btn" href="tools/upload.html">Открыть страницу загрузки</a>
+        </div>
         <p class="hint">После загрузки сайт на GitHub Pages обновляется сам за 1–10 минут.</p>
       </div>
     </section>

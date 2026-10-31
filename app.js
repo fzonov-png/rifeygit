@@ -356,6 +356,7 @@ async function enterApp() {
   $('#screen-login').hidden = true;
   $('#screen-app').hidden = false;
   $('#who-name').textContent = USER.full_name + ' (' + USER.login + ')';
+  $('#avatar').textContent = (USER.full_name || USER.login).trim().charAt(0).toUpperCase();
   $('#tab-users').hidden = !isEngineer();
   $('#tab-upload').hidden = !isEngineer();
   $('#btn-report').hidden = false;
