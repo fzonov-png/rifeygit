@@ -73,13 +73,12 @@ function showTab(name) {
 
 /* ---------- блокировка скачивания (обязательные поля наладчика) ---------- */
 function guardOK() {
-  return !!$('#dl-purpose').value.trim();
+  return !!$('#dl-factory').value.trim() && !!$('#dl-purpose').value.trim();
 }
 
 function updateGuard() {
-  const ok = guardOK();
-  $('#dl-ok').hidden = !ok;
-  if (ok) renderDownload();      // разблокировать список
+  $('#dl-ok').hidden = !guardOK();
+  renderDownload();              // и блокировать, и разблокировать список
 }
 
 function autofillEquipment() {
@@ -182,11 +181,15 @@ function renderDownload() {
 }
 
 function renderProgramsTab() {
+  const locked = USER.role === 'naladchik' && !guardOK();
+  $('#pg-lock').hidden = !locked;
   $('#pg-programs').innerHTML =
     (SITE.programs || []).map(programCard).join('') ||
     '<p class="hint">Программы ещё не загружены.</p>';
-  document.querySelectorAll('#pg-programs .dl-btn').forEach(b =>
-    b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label)));
+  document.querySelectorAll('#pg-programs .dl-btn').forEach(b => {
+    b.disabled = locked;
+    b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
+  });
 
   // схемы: общие по пульту + привязанные к программе
   const schems = SITE.schematics || [];
@@ -204,8 +207,10 @@ function renderProgramsTab() {
             <button class="dl-btn" data-dl="${esc(s.file.path)}" data-label="схема ${esc(pult)}">Скачать</button>
           </div>`).join('')}
       </div>`).join('');
-    document.querySelectorAll('#pg-schematics .dl-btn').forEach(b =>
-      b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label)));
+    document.querySelectorAll('#pg-schematics .dl-btn').forEach(b => {
+      b.disabled = locked;
+      b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
+    });
   }
 }
 
@@ -383,6 +388,7 @@ function boot() {
     b.addEventListener('click', () => showTab(b.dataset.tab)));
 
   $('#dl-purpose').addEventListener('change', updateGuard);
+  $('#dl-factory').addEventListener('input', updateGuard);
   $('#dl-factory').addEventListener('change', autofillEquipment);
   $('#eq-search').addEventListener('input', renderEquipment);
   $('#eq-add').addEventListener('click', () => openEqForm(''));
