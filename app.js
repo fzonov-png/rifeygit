@@ -20,12 +20,20 @@ const isEngineer = () => USER && (USER.role === 'admin' || USER.role === 'engine
 const canDownload = () => USER && (isEngineer() || guardOK());
 
 /* ---------- вход ---------- */
+const APP_VERSION = '5';
+
 async function doLogin(ev) {
   ev.preventDefault();
-  const login = $('#login-user').value.trim();
-  const pass = $('#login-pass').value;
   const err = $('#login-error');
+  const btn = $('#btn-login');
+  const btnText = $('#btn-login-text');
   err.hidden = true;
+  const login = $('#login-user').value.trim();
+  const pass = $('#login-pass').value.trim();
+  if (!login) { err.textContent = 'Введите логин'; err.hidden = false; $('#login-user').focus(); return; }
+  if (!pass) { err.textContent = 'Введите пароль'; err.hidden = false; $('#login-pass').focus(); return; }
+  btn.disabled = true;
+  if (btnText) btnText.textContent = 'Проверяю…';
   try {
     const data = await (await fetch('data/users.json', { cache: 'no-store' })).json();
     const u = data.users.find(x => x.login.toLowerCase() === login.toLowerCase() && x.active !== false);
@@ -33,16 +41,48 @@ async function doLogin(ev) {
       const hash = await sha256hex(u.salt + '\0' + u.login.toLowerCase() + '\0' + pass);
       if (hash === u.hash) {
         USER = { login: u.login, role: u.role, full_name: u.full_name || u.login };
-        localStorage.setItem('rifeygit_user', JSON.stringify(USER));
+        try { localStorage.setItem('rifeygit_user', JSON.stringify(USER)); }
+        catch { /* приватный режим: работаем без сохранения сессии */ }
         return enterApp();
       }
     }
-    err.textContent = 'Неверный логин или пароль';
+    err.textContent = 'Неверный логин или пароль. Проверьте раскладку клавиатуры и Caps Lock.';
     err.hidden = false;
   } catch (e) {
     err.textContent = 'Не удалось проверить вход: ' + e.message;
     err.hidden = false;
+  } finally {
+    btn.disabled = false;
+    if (btnText) btnText.textContent = 'Войти';
   }
+}
+
+/* ---------- диагностика входа (для «Не получается войти?») ---------- */
+async function runDiag() {
+  const out = $('#diag-out');
+  out.hidden = false;
+  out.textContent = 'Проверяю…';
+  const lines = [
+    'Версия сайта: ' + APP_VERSION,
+    'Браузер: ' + navigator.userAgent,
+    'Скрипты: работают',
+    'crypto.subtle: ' + (window.crypto && crypto.subtle ? 'да' : 'НЕТ'),
+  ];
+  try {
+    localStorage.setItem('__rifey_test', '1');
+    localStorage.removeItem('__rifey_test');
+    lines.push('localStorage: да');
+  } catch (e) { lines.push('localStorage: НЕТ (' + e.message + ')'); }
+  const t0 = Date.now();
+  try {
+    const r = await fetch('data/users.json?d=' + Date.now(), { cache: 'no-store' });
+    const j = await r.json();
+    lines.push('Данные учёток: HTTP ' + r.status + ', записей: ' + (j.users || []).length +
+      ', ' + (Date.now() - t0) + ' мс');
+  } catch (e) {
+    lines.push('Данные учёток: ОШИБКА ' + e.message);
+  }
+  out.textContent = lines.join('\n');
 }
 
 function logout() {
@@ -376,6 +416,11 @@ async function enterApp() {
 }
 
 function boot() {
+  window.RIFEY_BOOTED = true;
+  const lr = $('#link-reload');
+  if (lr) lr.href = './?fresh=' + Date.now();
+  const diag = $('#btn-diag');
+  if (diag) diag.addEventListener('click', runDiag);
   // показ/скрытие пароля
   document.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => {
     const inp = document.getElementById(b.dataset.eye);

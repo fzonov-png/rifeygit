@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -28,19 +28,35 @@
         <p class="sub">Программы ПЛК и схемы пультов</p>
       </div>
     </div>
-    <form id="login-form" autocomplete="on">
+    <form id="login-form" autocomplete="on" novalidate>
       <label>Логин
-        <input id="login-user" name="username" autocomplete="username" required>
+        <input id="login-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false">
       </label>
       <label>Пароль
         <span class="pw-wrap">
-          <input id="login-pass" type="password" name="password" autocomplete="current-password" required>
+          <input id="login-pass" type="password" name="password" autocomplete="current-password" autocapitalize="none" spellcheck="false">
           <button type="button" class="eye" data-eye="login-pass" title="Показать пароль">&#128065;</button>
         </span>
       </label>
-      <button type="submit" class="primary wide">Войти</button>
+      <button type="submit" class="primary wide" id="btn-login">
+        <span id="btn-login-text">Войти</span>
+      </button>
       <p id="login-error" class="error" hidden></p>
+      <p id="boot-error" class="error" hidden>Не загрузилось приложение.
+        <a href="./?fresh=1">Обновите страницу</a> или откройте ссылку заново.</p>
     </form>
+
+    <details id="login-help">
+      <summary>Не получается войти?</summary>
+      <p class="hint">Проверьте раскладку клавиатуры (логин и пароль — латиницей),
+         Caps Lock и лишние пробелы. Если ссылка открыта из WhatsApp или Telegram,
+         откройте её в Chrome или Safari.</p>
+      <div class="row">
+        <button type="button" id="btn-diag" class="ghost">Проверить соединение</button>
+        <a class="btn ghost" id="link-reload" href="./?fresh=1">Открыть заново</a>
+      </div>
+      <pre id="diag-out" class="diag" hidden></pre>
+    </details>
   </div>
 </div>
 
@@ -213,7 +229,16 @@
   </div>
 </dialog>
 
-<script src="gh.js"></script>
-<script src="app.js"></script>
+<script src="gh.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script>
+  // если скрипт не выполнился (старый браузер, блокировка, обрыв сети) — сказать об этом
+  setTimeout(function () {
+    if (!window.RIFEY_BOOTED) {
+      var e = document.getElementById('boot-error');
+      if (e) e.hidden = false;
+    }
+  }, 2500);
+</script>
 </body>
 </html>

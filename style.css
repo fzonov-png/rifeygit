@@ -178,6 +178,13 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
   background: transparent; color: var(--muted); font-size: 15px;
 }
 .pw-wrap .eye:hover { color: var(--ink); background: transparent; }
+#login-help { margin-top: 16px; }
+#login-help .row { margin-top: 4px; }
+.diag {
+  margin: 10px 0 0; padding: 10px 12px; white-space: pre-wrap; word-break: break-word;
+  font: 12px/1.45 var(--mono); color: var(--muted);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
 
 /* ============ ПРОГРАММЫ ============ */
 .pg {
