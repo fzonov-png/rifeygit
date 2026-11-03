@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '11';
+const APP_VERSION = '12';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -131,12 +131,35 @@ function downloadFile(path, label) {
   }
   if (!path) { alert('Файл не найден в записи версии.'); return; }
   logDownload(label);
-  const a = document.createElement('a');
-  a.href = GH.siteFileURL(path);
-  a.download = path.split('/').pop();
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  triggerDownload(GH.siteFileURL(path), path.split('/').pop(), path);
+}
+
+/* Если файл ещё не попал на Pages (пересборка идёт 1–10 минут) — качаем
+ * напрямую из репозитория через blob, чтобы ссылка не отдавала 404. */
+async function triggerDownload(url, name, path) {
+  const open = (href, downloadAttr) => {
+    const a = document.createElement('a');
+    a.href = href;
+    if (downloadAttr) a.download = downloadAttr;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+  try {
+    const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    if (r.ok) { open(url); return; }
+  } catch { /* сайт недоступен — пробуем репозиторий */ }
+  try {
+    const r = await fetch(GH.rawFileURL(path), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const blob = await r.blob();
+    const obj = URL.createObjectURL(blob);
+    open(obj, name);
+    setTimeout(() => URL.revokeObjectURL(obj), 60000);
+  } catch (e) {
+    alert('Не удалось скачать «' + name + '»: ' + e.message +
+      '. Попробуйте через 1–2 минуты — файл ещё публикуется на сайте.');
+  }
 }
 
 /* ---------- модель версии: старый и новый формат ---------- */

@@ -123,6 +123,12 @@ const GH = {
     return base + encodeURI(path);
   },
 
+  /* Резервная ссылка: файл в репозитории доступен сразу после коммита. */
+  rawFileURL(path) {
+    return 'https://raw.githubusercontent.com/' + GH_REPO + '/' + GH_BRANCH + '/' +
+      path.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now();
+  },
+
   async headSHA() {
     // ?t= — обязательный обход кэша: без него повторная попытка берёт старый SHA
     const r = await this.api('GET', '/repos/' + GH_REPO + '/git/ref/heads/' + GH_BRANCH +
