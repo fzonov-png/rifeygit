@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -458,8 +458,7 @@ function boot() {
   $('#btn-report').addEventListener('click', () => {
     $('#report-text').value = reportText();
     $('#dlg-report').showModal();
-  });
-  $('#rp-close').addEventListener('click', () => $('#dlg-report').close());
+  });  $('#rp-close').addEventListener('click', () => $('#dlg-report').close());
   $('#rp-copy').addEventListener('click', () => {
     $('#report-text').select();
     navigator.clipboard?.writeText($('#report-text').value);
@@ -468,6 +467,25 @@ function boot() {
     window.open('https://wa.me/?text=' + encodeURIComponent(reportText()), '_blank');
   });
 
+  $('#btn-refresh').addEventListener('click', async () => {
+    const btn = $('#btn-refresh');
+    btn.disabled = true;
+    btn.textContent = 'Обновляю…';
+    try {
+      await loadSite();
+      $('#eq-list').innerHTML = (SITE.equipment || [])
+        .map(e => `<option value="${esc(e.factory_no)}">`).join('');
+      const active = document.querySelector('.tab.active');
+      showTab(active ? active.dataset.tab : 'download');
+    } catch (e) {
+      alert('Не удалось обновить данные: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Обновить данные';
+    }
+  });
+
+  $('#app-ver').textContent = 'v' + APP_VERSION;
   enterApp();
 }
 

@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -163,7 +163,11 @@
 
   <footer class="foot">
     <span id="foot-updated"></span>
-    <button id="btn-report" class="ghost" hidden title="Отчёт о скачиваниях на этом устройстве">Отчёт</button>
+    <span class="foot-actions">
+      <button id="btn-refresh" class="ghost" title="Перечитать данные с GitHub">Обновить данные</button>
+      <button id="btn-report" class="ghost" hidden title="Отчёт о скачиваниях на этом устройстве">Отчёт</button>
+      <span id="app-ver" class="hint"></span>
+    </span>
   </footer>
 </div>
 
@@ -180,7 +184,7 @@
 
 <datalist id="pult-list"></datalist>
 
-<script src="gh.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="gh.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

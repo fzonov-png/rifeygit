@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=10">
+<link rel="stylesheet" href="../style.css?v=11">
 </head>
 <body>
 <div class="screen">
@@ -23,6 +23,17 @@
       RifeyGit
     </a>
     <a class="btn ghost" href="../index.html">&larr; На главную</a>
+  </div>
+
+  <div class="status-card" id="status-card">
+    <div class="status-line">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="log" class="status-text">Готово к работе.</span>
+    </div>
+    <div id="token-warn" class="token-warn" hidden>
+      <b>GitHub-токен не задан</b> — загрузка не сработает.
+      <button type="button" class="primary sm" id="b-open-token">Указать токен</button>
+    </div>
   </div>
 
   <div class="card">
@@ -52,7 +63,7 @@
       <label>Код программы * <input id="v-code" list="code-list" placeholder="напр. BZ120" autocapitalize="characters"></label>
       <label>Пульт * <input id="v-pult" list="pult-list" placeholder="напр. ПУ-БЗ"></label>
       <label>Версия ПЛК * <input id="v-ver" placeholder="напр. 3.2"></label>
-      <label>Сообщение (что изменилось) * <input id="v-msg"></label>
+      <label>Сообщение (что изменилось) <input id="v-msg" placeholder="необязательно"></label>
     </div>
     <label>Файл программы ПЛК * <input type="file" id="v-plcfile"></label>
     <details id="v-newprog">
@@ -99,8 +110,7 @@
   </div>
 
   <div class="card">
-    <h3>4. Новый пользователь</h3>
-    <div class="grid2">
+    <h3>4. Новый пользователь</h3>    <div class="grid2">
       <label>Логин * <input id="u-login" autocapitalize="none"></label>
       <label>Пароль * <input id="u-pass"></label>
       <label>ФИО / подпись <input id="u-fio"></label>
@@ -114,22 +124,22 @@
     </div>
     <button id="b-user" class="primary">Создать пользователя</button>
   </div>
-
-  <div class="card">
-    <h3>Статус</h3>
-    <p id="log" class="hint">Готово к работе.</p>
-  </div>
 </div>
 
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=10"></script>
-<script src="../zip.js?v=10"></script>
+<script src="../gh.js?v=11"></script>
+<script src="../zip.js?v=11"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
-const log = m => { $('#log').textContent = m; console.log('[rifeygit]', m); };
+function log(m, kind = 'info') {
+  const text = $('#log');
+  text.textContent = m;
+  $('#status-card').dataset.kind = kind;
+  console.log('[rifeygit]', m);
+}
 const nowISO = () => new Date().toISOString().slice(0, 19);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -140,6 +150,37 @@ try { USER = JSON.parse(localStorage.getItem('rifeygit_user') || 'null'); } catc
 if (!USER) location.replace('../login.html');
 else if (USER.role === 'naladchik') location.replace('../index.html');
 const author = USER ? (USER.full_name || USER.login) : '';
+
+/* Токен: пока его нет — сверху висит предупреждение, действия не «молчат». */
+function tokenUI() {
+  const has = GH.hasToken();
+  $('#token-warn').hidden = has;
+  $('#token-status').textContent = has ? 'токен сохранён' : 'токен не задан';
+  if (!has) $('#token-box').open = true;
+}
+
+function needToken() {
+  if (GH.hasToken()) return true;
+  log('Сначала укажите GitHub-токен: раскройте блок «GitHub-токен» и нажмите «Сохранить токен».', 'err');
+  $('#token-box').open = true;
+  $('#token-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  return false;
+}
+
+/* Кнопка на время работы: «Загружаю…», повторное нажатие невозможно. */
+async function busy(btnId, label, fn) {
+  const btn = document.getElementById(btnId);
+  const old = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = label; }
+  try { return await fn(); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
+}
+
+function humanSize(n) {
+  if (!n && n !== 0) return '';
+  return n > 1048576 ? (n / 1048576).toFixed(1) + ' МБ'
+    : n > 1024 ? Math.round(n / 1024) + ' КБ' : n + ' Б';
+}
 
 async function sha256hex(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -194,53 +235,59 @@ async function reload() {
 
 /* ——— 1. версия ПЛК ——— */
 async function uploadPlc() {
+  if (!needToken()) return;
   const code = $('#v-code').value.trim().toUpperCase();
   const pult = $('#v-pult').value.trim();
   const version = $('#v-ver').value.trim();
   const message = $('#v-msg').value.trim();
   const file = $('#v-plcfile').files[0];
-  if (!code || !pult || !version || !message || !file)
-    return log('Заполните: код, пульт, версию ПЛК, сообщение и файл.');
-  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  if (!code || !pult || !version || !file) {
+    return log('Заполните обязательные поля: код программы, пульт, версию ПЛК и файл.', 'err');
+  }
 
   try {
-    log('Читаю site.json…');
+    log('Читаю данные сайта…');
     const site = await GH.apiJSON('data/site.json');
     site.programs = site.programs || [];
     site.pults = site.pults || [];
     let prog = site.programs.find(p => p.code.toUpperCase() === code);
     if (!prog) {
       const name = $('#v-name').value.trim();
-      if (!name) return log('Программы «' + code + '» нет — заполните название в блоке «создать новую».');
+      if (!name) {
+        $('#v-newprog').open = true;
+        $('#v-newprog').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return log('Программы «' + code + '» ещё нет — раскройте «Программы нет в списке» и укажите название.', 'err');
+      }
       prog = { code, name, target: $('#v-target').value.trim(),
                plant_type: $('#v-plant').value.trim(), description: '', deleted: false, versions: [] };
       site.programs.push(prog);
     }
     prog.versions = prog.versions || [];
     if (prog.versions.some(v => v.version === version && (v.pult || '').toLowerCase() === pult.toLowerCase()))
-      return log('Версия ' + version + ' для пульта ' + pult + ' уже есть. Панели добавляйте в разделе 2.');
+      return log('Версия ' + version + ' для пульта ' + pult + ' уже есть. Панели добавляйте в разделе 2.', 'err');
 
     const dir = `data/files/programs/${code}/${pult}/${version}`;
-    log('Готовлю файл ПЛК…');
+    log('Готовлю файл ПЛК (' + humanSize(file.size) + ')…', 'busy');
     const blob = await GH.fileToBlob(file);
     const plc = { path: `${dir}/plc_${file.name}`, name: file.name, size: file.size };
 
     prog.versions.push({
-      version, pult, message, author, created_at: nowISO(),
+      version, pult, message: message || 'без описания', author, created_at: nowISO(),
       plc, panels: [],
     });
     if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
     site.updated = nowISO();
 
-    log('Записываю в GitHub…');
+    log('Записываю в GitHub — файл ' + humanSize(file.size) + '…', 'busy');
     const sha = await GH.commitFiles([
       { path: plc.path, ...blob },
       { path: 'data/site.json', content: JSON.stringify(site, null, 2) },
-    ], `ПЛК ${code} ${version} (${pult}): ${message}`);
-    log('Готово. Коммит ' + sha.slice(0, 8) + '. Теперь можно добавить панели в разделе 2.');
+    ], `ПЛК ${code} ${version} (${pult}): ${message || 'без описания'}`);
+    log('Готово: версия ПЛК ' + version + ' загружена (коммит ' + sha.slice(0, 8) +
+      '). Теперь добавьте панели в разделе 2.', 'ok');
     $('#v-msg').value = ''; $('#v-plcfile').value = '';
     await reload();
-  } catch (e) { log('Ошибка: ' + e.message); }
+  } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
 /* ——— 2. панели ——— */
@@ -281,21 +328,24 @@ async function buildKit(code, pult, plcRec, panelFile, panelVer) {
 }
 
 async function uploadPanels() {
+  if (!needToken()) return;
   const target = $('#p-target').value;
-  if (!target) return log('Выберите версию ПЛК (раздел 2).');
+  if (!target) {
+    $('#p-target').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return log('Сначала загрузите версию ПЛК (раздел 1) — она появится в списке раздела 2.', 'err');
+  }
   const files = [...$('#p-files').files];
-  if (!files.length) return log('Выберите хотя бы один файл панели.');
-  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  if (!files.length) return log('Выберите хотя бы один файл панели.', 'err');
 
   try {
-    log('Читаю site.json…');
+    log('Читаю данные сайта…');
     const site = await GH.apiJSON('data/site.json');
     const [code, idxRaw] = target.split('|');
     const idx = Number(idxRaw);
     const prog = (site.programs || []).find(p => p.code === code);
-    if (!prog || !prog.versions || !prog.versions[idx]) return log('Версия ПЛК не найдена — обновите страницу.');
+    if (!prog || !prog.versions || !prog.versions[idx]) return log('Версия ПЛК не найдена — обновите страницу.', 'err');
     const v = normalizeVersion(prog.versions[idx]);
-    if (!v.plc) return log('У выбранной версии нет файла ПЛК.');
+    if (!v.plc) return log('У выбранной версии нет файла ПЛК.', 'err');
     prog.versions[idx] = v;
     v.panels = v.panels || [];
 
@@ -309,8 +359,8 @@ async function uploadPanels() {
       const pv = (vers[i] ? vers[i].value.trim() : '') || file.name.replace(/\.[^.]+$/, '');
       const pmsg = msgs[i] ? msgs[i].value.trim() : '';
       if (v.panels.some(p => (p.version || '') === pv))
-        return log('Версия панели ' + pv + ' уже есть у этой ПЛК. Укажите другую версию.');
-      log(`Панель ${i + 1}/${files.length}: ${file.name}…`);
+        return log('Версия панели ' + pv + ' уже есть у этой ПЛК. Укажите другую версию.', 'err');
+      log(`Панель ${i + 1}/${files.length}: ${file.name} (${humanSize(file.size)})…`, 'busy');
       const blob = await GH.fileToBlob(file);
       const dir = `data/files/programs/${code}/${v.pult}/${v.version}`;
       const rec = {
@@ -321,25 +371,25 @@ async function uploadPanels() {
       commits.push({ path: rec.file.path, ...blob });
 
       if ($('#p-kit').checked) {
-        log('Собираю комплект для ' + pv + '…');
+        log('Собираю комплект для панели ' + pv + '…', 'busy');
         try {
           const kit = await buildKit(code, v.pult, v, file, pv);
           const kblob = await GH.fileToBlob(new File([kit.blob], kit.name));
           commits.push({ path: kit.path, ...kblob });
           rec.kit = { path: kit.path, name: kit.name, size: kit.size };
-        } catch (e) { log('Комплект не собран: ' + e.message); }
+        } catch (e) { log('Комплект не собран: ' + e.message, 'err'); }
       }
       v.panels.push(rec);
     }
 
     site.updated = nowISO();
     commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
-    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…');
+    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…', 'busy');
     const sha = await GH.commitFiles(commits, `панели для ${code} ${v.version}: ${files.length} шт.`);
-    log('Готово. Коммит ' + sha.slice(0, 8) + '. Сайт обновится за 1–10 минут.');
+    log('Готово: панелей ' + files.length + ' (коммит ' + sha.slice(0, 8) + '). Сайт обновится за 1–10 минут.', 'ok');
     $('#p-files').value = ''; $('#p-list').innerHTML = '';
     await reload();
-  } catch (e) { log('Ошибка: ' + e.message); }
+  } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
 /* ——— 3. схемы ——— */
@@ -354,14 +404,14 @@ function schematicRows() {
 }
 
 async function uploadSchematics() {
+  if (!needToken()) return;
   const pult = $('#s-pult').value.trim();
   const progCode = $('#s-prog').value.trim().toUpperCase();
   const files = [...$('#s-files').files];
-  if (!pult || !files.length) return log('Укажите пульт и выберите файлы схем.');
-  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  if (!pult || !files.length) return log('Укажите пульт и выберите файлы схем.', 'err');
 
   try {
-    log('Читаю site.json…');
+    log('Читаю данные сайта…');
     const site = await GH.apiJSON('data/site.json');
     site.schematics = site.schematics || [];
     site.pults = site.pults || [];
@@ -389,29 +439,29 @@ async function uploadSchematics() {
           (s.program || null) === rec.program &&
           s.file.name === file.name));
       site.schematics.push(rec);
-      log('Схема ' + (i + 1) + '/' + files.length + ': ' + file.name);
+      log('Схема ' + (i + 1) + '/' + files.length + ': ' + file.name, 'busy');
     }
 
     if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
     site.updated = nowISO();
 
     // комплекты этого пульта пересобираем: в них должны попасть новые схемы
-    log('Пересобираю комплекты пульта ' + pult + '…');
+    log('Пересобираю комплекты пульта ' + pult + '…', 'busy');
     const kits = await rebuildKits(site, pult, local);
     commits.push(...kits.commits);
 
     commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
 
-    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…');
+    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…', 'busy');
     const sha = await GH.commitFiles(commits,
       `схемы ${pult}${progCode ? ' (' + progCode + ')' : ''}: ${files.length} шт.` +
       (kits.count ? `, комплектов: ${kits.count}` : ''));
-    log('Готово. Коммит ' + sha.slice(0, 8) +
-      (kits.count ? '. Комплектов пересобрано: ' + kits.count : '') +
-      '. Сайт обновится за 1–10 минут.');
+    log('Готово: схемы загружены (коммит ' + sha.slice(0, 8) + ')' +
+      (kits.count ? ', комплектов пересобрано: ' + kits.count : '') +
+      '. Сайт обновится за 1–10 минут.', 'ok');
     $('#s-files').value = ''; $('#s-list').innerHTML = '';
     await reload();
-  } catch (e) { log('Ошибка: ' + e.message); }
+  } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
 /* Пересобрать комплекты всех версий панелей указанного пульта:
@@ -456,72 +506,79 @@ async function rebuildKits(site, pult, local = new Map()) {
 
 /* Пересобрать комплекты пульта без загрузки файлов (после импорта/правок). */
 async function rebuildOnly() {
+  if (!needToken()) return;
   const pult = $('#s-pult').value.trim();
-  if (!pult) return log('Укажите пульт в разделе 3.');
-  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  if (!pult) return log('Укажите пульт в разделе 3.', 'err');
   try {
-    log('Читаю site.json…');
+    log('Читаю данные сайта…');
     const site = await GH.apiJSON('data/site.json');
     site.schematics = site.schematics || [];
-    log('Пересобираю комплекты пульта ' + pult + '…');
+    log('Пересобираю комплекты пульта ' + pult + '…', 'busy');
     const kits = await rebuildKits(site, pult);
-    if (!kits.count) return log('У пульта ' + pult + ' нет версий панелей — пересобирать нечего.');
+    if (!kits.count) return log('У пульта ' + pult + ' нет версий панелей — пересобирать нечего.', 'err');
     site.updated = nowISO();
     kits.commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
-    log('Записываю в GitHub (' + kits.commits.length + ' файлов)…');
+    log('Записываю в GitHub (' + kits.commits.length + ' файлов)…', 'busy');
     const sha = await GH.commitFiles(kits.commits, `комплекты ${pult}: ${kits.count} шт.`);
-    log('Готово. Коммит ' + sha.slice(0, 8) + '. Комплектов: ' + kits.count + '.');
+    log('Готово: комплектов ' + kits.count + ' (коммит ' + sha.slice(0, 8) + ').', 'ok');
     await reload();
-  } catch (e) { log('Ошибка: ' + e.message); }
+  } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
 /* ——— 4. пользователь ——— */
 async function createUser() {
+  if (!needToken()) return;
   const login = $('#u-login').value.trim();
   const pass = $('#u-pass').value;
-  if (!login || !pass) return log('Укажите логин и пароль.');
-  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  if (!login || !pass) return log('Укажите логин и пароль.', 'err');
   try {
     const data = await GH.apiJSON('data/users.json');
     if (data.users.some(u => u.login.toLowerCase() === login.toLowerCase()))
-      return log('Логин «' + login + '» уже существует.');
+      return log('Логин «' + login + '» уже существует.', 'err');
     const salt = [...crypto.getRandomValues(new Uint8Array(8))]
       .map(b => b.toString(16).padStart(2, '0')).join('');
     const hash = await sha256hex(salt + '\0' + login.toLowerCase() + '\0' + pass);
     data.users.push({ login, role: $('#u-role').value,
                       full_name: $('#u-fio').value.trim(), salt, hash, active: true });
     data.users.sort((a, b) => a.login.localeCompare(b.login));
+    log('Создаю пользователя ' + login + '…', 'busy');
     await GH.commitFiles(
       [{ path: 'data/users.json', content: JSON.stringify(data, null, 2) }],
       'пользователь: ' + login);
     $('#u-login').value = ''; $('#u-pass').value = ''; $('#u-fio').value = '';
-    log('Пользователь ' + login + ' создан.');
-  } catch (e) { log('Ошибка: ' + e.message); }
+    log('Пользователь ' + login + ' создан.', 'ok');
+  } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
 /* ——— кнопки ——— */
 $('#eye-token').addEventListener('click', () => {
   const i = $('#u-token'); i.type = i.type === 'password' ? 'text' : 'password';
 });
+$('#b-open-token').addEventListener('click', () => {
+  $('#token-box').open = true;
+  $('#token-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  $('#u-token').focus();
+});
 $('#b-token').addEventListener('click', () => {
   GH.setToken($('#u-token').value);
-  $('#token-status').textContent = GH.hasToken() ? 'токен сохранён' : 'пусто';
-  if (GH.hasToken()) { $('#token-box').open = false; reload(); }
+  tokenUI();
+  if (GH.hasToken()) { $('#token-box').open = false; log('Токен сохранён. Можно загружать версии.', 'ok'); reload(); }
+  else log('Токен пустой — вставьте его целиком.', 'err');
 });
 $('#v-plcfile').addEventListener('change', () => {
   const f = $('#v-plcfile').files[0];
-  if (f) log('Выбран файл ПЛК: ' + f.name);
+  if (f) log('Выбран файл ПЛК: ' + f.name + ' (' + humanSize(f.size) + '). Нажмите «Загрузить версию ПЛК».');
 });
 $('#p-files').addEventListener('change', panelRows);
 $('#s-files').addEventListener('change', schematicRows);
-$('#b-plc').addEventListener('click', uploadPlc);
-$('#b-panels').addEventListener('click', uploadPanels);
-$('#b-schem').addEventListener('click', uploadSchematics);
-$('#b-rekit').addEventListener('click', rebuildOnly);
-$('#b-user').addEventListener('click', createUser);
+$('#b-plc').addEventListener('click', () => busy('b-plc', 'Загружаю…', uploadPlc));
+$('#b-panels').addEventListener('click', () => busy('b-panels', 'Загружаю…', uploadPanels));
+$('#b-schem').addEventListener('click', () => busy('b-schem', 'Загружаю…', uploadSchematics));
+$('#b-rekit').addEventListener('click', () => busy('b-rekit', 'Пересобираю…', rebuildOnly));
+$('#b-user').addEventListener('click', () => busy('b-user', 'Создаю…', createUser));
 
 $('#u-token').value = GH.token();
-$('#token-status').textContent = GH.hasToken() ? 'токен сохранён' : 'токен не задан';
+tokenUI();
 if (!GH.hasToken()) $('#token-box').open = true;
 reload();
 </script>

@@ -364,3 +364,38 @@ dialog h3 { margin-top: 0; }
   .auth-foot { display: none; }
   .auth-form { padding: 26px 22px 28px; }
 }
+
+/* ============ СТАТУС НА СТРАНИЦЕ ЗАГРУЗКИ ============ */
+.status-card {
+  position: sticky; top: 8px; z-index: 30;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 10px 14px;
+  margin: 10px 0 14px; box-shadow: var(--shadow-md);
+}
+.status-line { display: flex; align-items: center; gap: 10px; }
+.status-dot {
+  flex: none; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--muted); transition: background .15s;
+}
+.status-text { font-size: 14px; line-height: 1.45; }
+.status-card[data-kind="busy"] { border-color: color-mix(in srgb, #f59e0b 45%, var(--line)); }
+.status-card[data-kind="busy"] .status-dot { background: #f59e0b; }
+.status-card[data-kind="ok"] { border-color: color-mix(in srgb, var(--ok) 50%, var(--line)); }
+.status-card[data-kind="ok"] .status-dot { background: var(--ok); }
+.status-card[data-kind="err"] { border-color: color-mix(in srgb, var(--err) 50%, var(--line)); }
+.status-card[data-kind="err"] .status-dot { background: var(--err); }
+.status-card[data-kind="err"] .status-text { color: var(--err); }
+
+.token-warn {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 9px; padding: 8px 10px; font-size: 13.5px;
+  color: var(--ink); border-radius: var(--radius-sm);
+  background: color-mix(in srgb, #f59e0b 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--line));
+}
+.status-card .btn.sm { padding: 5px 11px; font-size: 13px; }
+
+
+.foot-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.foot-actions .hint { font-size: 12px; }
+
