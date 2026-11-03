@@ -1,48 +1,10 @@
 {
-  "updated": "2026-11-03T14:31:17",
+  "updated": null,
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М",
-    "ПУ-ПРОВЕРКА"
+    "ПУ-Б2-М"
   ],
-  "programs": [
-    {
-      "code": "CHKDEMO",
-      "name": "Проверка загрузки",
-      "target": "",
-      "plant_type": "",
-      "description": "",
-      "deleted": false,
-      "versions": [
-        {
-          "version": "1.0",
-          "pult": "ПУ-ПРОВЕРКА",
-          "message": "без описания",
-          "author": "Инженер-программист",
-          "created_at": "2026-11-03T14:29:31",
-          "plc": {
-            "path": "data/files/programs/CHKDEMO/ПУ-ПРОВЕРКА/1.0/plc_check.ap15",
-            "name": "check.ap15",
-            "size": 14
-          },
-          "panels": []
-        },
-        {
-          "version": "1.1",
-          "pult": "ПУ-ПРОВЕРКА",
-          "message": "проверка мгновенного скачивания",
-          "author": "Инженер-программист",
-          "created_at": "2026-11-03T14:31:17",
-          "plc": {
-            "path": "data/files/programs/CHKDEMO/ПУ-ПРОВЕРКА/1.1/plc_check11.ap15",
-            "name": "check11.ap15",
-            "size": 14
-          },
-          "panels": []
-        }
-      ]
-    }
-  ],
+  "programs": [],
   "schematics": [],
   "equipment": []
 }
