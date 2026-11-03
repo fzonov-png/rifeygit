@@ -1,95 +1,10 @@
 {
-  "updated": "2026-11-03T14:08:19",
+  "updated": null,
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М",
-    "ПУ-ТЕСТ"
+    "ПУ-Б2-М"
   ],
-  "programs": [
-    {
-      "code": "E2EDEMO",
-      "name": "Тестовая программа E2E",
-      "target": "",
-      "plant_type": "ТЕСТ",
-      "description": "",
-      "deleted": false,
-      "versions": [
-        {
-          "version": "1.0",
-          "pult": "ПУ-ТЕСТ",
-          "message": "сквозная проверка",
-          "author": "Инженер-программист",
-          "created_at": "2026-11-03T14:03:33",
-          "plc": {
-            "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/plc_plc_e2e.ap15",
-            "name": "plc_e2e.ap15",
-            "size": 13
-          },
-          "panels": [
-            {
-              "version": "1.0",
-              "hmi_type": "ПУ-ТЕСТ",
-              "message": "первая панель",
-              "author": "Инженер-программист",
-              "created_at": "2026-11-03T14:06:14",
-              "file": {
-                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/hmi_panel_1.0.emtp",
-                "name": "panel_1.0.emtp",
-                "size": 12
-              },
-              "kit": {
-                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
-                "name": "E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
-                "size": 475
-              }
-            },
-            {
-              "version": "1.1",
-              "hmi_type": "ПУ-ТЕСТ",
-              "message": "вторая панель",
-              "author": "Инженер-программист",
-              "created_at": "2026-11-03T14:06:14",
-              "file": {
-                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/hmi_panel_1.1.emtp",
-                "name": "panel_1.1.emtp",
-                "size": 12
-              },
-              "kit": {
-                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
-                "name": "E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
-                "size": 475
-              }
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "schematics": [
-    {
-      "pult": "ПУ-ТЕСТ",
-      "program": null,
-      "file": {
-        "path": "data/files/schematics/common/ПУ-ТЕСТ/schema_a.pdf",
-        "name": "schema_a.pdf",
-        "size": 12
-      },
-      "description": "общая схема",
-      "updated_at": "2026-11-03T14:06:35",
-      "author": "Инженер-программист"
-    },
-    {
-      "pult": "ПУ-ТЕСТ",
-      "program": null,
-      "file": {
-        "path": "data/files/schematics/common/ПУ-ТЕСТ/schema_b.pdf",
-        "name": "schema_b.pdf",
-        "size": 12
-      },
-      "description": "схема шкафа",
-      "updated_at": "2026-11-03T14:06:35",
-      "author": "Инженер-программист"
-    }
-  ],
+  "programs": [],
+  "schematics": [],
   "equipment": []
 }
