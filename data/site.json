@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03T14:29:31",
+  "updated": "2026-11-03T14:31:17",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -23,6 +23,19 @@
           "plc": {
             "path": "data/files/programs/CHKDEMO/ПУ-ПРОВЕРКА/1.0/plc_check.ap15",
             "name": "check.ap15",
+            "size": 14
+          },
+          "panels": []
+        },
+        {
+          "version": "1.1",
+          "pult": "ПУ-ПРОВЕРКА",
+          "message": "проверка мгновенного скачивания",
+          "author": "Инженер-программист",
+          "created_at": "2026-11-03T14:31:17",
+          "plc": {
+            "path": "data/files/programs/CHKDEMO/ПУ-ПРОВЕРКА/1.1/plc_check11.ap15",
+            "name": "check11.ap15",
             "size": 14
           },
           "panels": []
