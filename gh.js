@@ -54,6 +54,41 @@ const GH = {
 
   async rawJSON(path) { return JSON.parse(await this.rawText(path)); },
 
+  /* Читать файл через API (без CDN-кэша). Нужно странице загрузки: сразу после
+   * коммита raw.githubusercontent ещё отдаёт старую версию site.json. */
+  async apiText(path) {
+    const r = await this.api('GET', '/repos/' + GH_REPO + '/contents/' + path +
+      '?ref=' + GH_BRANCH + '&t=' + Date.now());
+    if (!r.ok) throw new Error('не удалось прочитать ' + path + ' (HTTP ' + r.status +
+      ': ' + await this.errBody(r) + ')');
+    const j = await r.json();
+    return new TextDecoder().decode(this.b64bytes(j.content || ''));
+  },
+
+  async apiJSON(path) { return JSON.parse(await this.apiText(path)); },
+
+  b64bytes(b64) {
+    const bin = atob(String(b64).replace(/\s/g, ''));
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  },
+
+  /* Байты файла из репозитория: сначала raw (быстро), при промахе — через API. */
+  async fileBytes(path) {
+    const enc = path.split('/').map(encodeURIComponent).join('/');
+    const r = await fetch('https://raw.githubusercontent.com/' + GH_REPO + '/' +
+      GH_BRANCH + '/' + enc + '?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) return r.arrayBuffer();
+    const a = await this.api('GET', '/repos/' + GH_REPO + '/contents/' + path +
+      '?ref=' + GH_BRANCH + '&t=' + Date.now());
+    if (!a.ok) throw new Error('нет файла ' + path + ' (HTTP ' + r.status + '/' + a.status + ')');
+    const j = await a.json();
+    if (!j.content) throw new Error('файл ' + path + ' больше 1 МБ — попробуйте через минуту');
+    const bytes = this.b64bytes(j.content);
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  },
+
   /* Ссылка на скачивание файла с сайта Pages (не через raw — быстрее и стабильнее). */
   siteFileURL(path) {
     const base = location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '');

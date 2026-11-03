@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=7">
+<link rel="stylesheet" href="../style.css?v=8">
 </head>
 <body>
 <div class="screen">
@@ -121,8 +121,8 @@
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=7"></script>
-<script src="../zip.js?v=7"></script>
+<script src="../gh.js?v=8"></script>
+<script src="../zip.js?v=8"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -141,13 +141,6 @@ const author = USER ? (USER.full_name || USER.login) : '';
 async function sha256hex(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function rawBinary(path) {
-  const url = 'https://raw.githubusercontent.com/' + GH_REPO + '/' + GH_BRANCH + '/' + encodeURI(path);
-  const r = await fetch(url, { cache: 'no-store' });
-  if (!r.ok) throw new Error('нет файла ' + path + ' (HTTP ' + r.status + ')');
-  return r.arrayBuffer();
 }
 
 function normalizeVersion(v) {
@@ -183,8 +176,12 @@ function refreshUi() {
 }
 
 async function reload() {
+  if (!GH.hasToken()) {
+    log('Вставьте GitHub-токен в блоке выше — после этого появятся программы и пульты.');
+    return;
+  }
   try {
-    SITE = await GH.rawJSON('data/site.json');
+    SITE = await GH.apiJSON('data/site.json');
     SITE.programs = SITE.programs || [];
     SITE.schematics = SITE.schematics || [];
     SITE.pults = SITE.pults || [];
@@ -205,7 +202,7 @@ async function uploadPlc() {
 
   try {
     log('Читаю site.json…');
-    const site = await GH.rawJSON('data/site.json');
+    const site = await GH.apiJSON('data/site.json');
     site.programs = site.programs || [];
     site.pults = site.pults || [];
     let prog = site.programs.find(p => p.code.toUpperCase() === code);
@@ -265,11 +262,11 @@ function panelRows() {
 
 async function buildKit(code, pult, plcRec, panelFile, panelVer) {
   const items = [];
-  items.push({ name: plcRec.plc.name, data: await rawBinary(plcRec.plc.path) });
+  items.push({ name: plcRec.plc.name, data: await GH.fileBytes(plcRec.plc.path) });
   items.push({ name: panelFile.name, data: await panelFile.arrayBuffer() });
   for (const s of (SITE.schematics || [])) {
     if ((s.pult || '').toLowerCase() !== pult.toLowerCase()) continue;
-    try { items.push({ name: s.file.name, data: await rawBinary(s.file.path) }); }
+    try { items.push({ name: s.file.name, data: await GH.fileBytes(s.file.path) }); }
     catch (e) { log('Схема не вошла в комплект: ' + s.file.name); }
   }
   const zipBlob = await Zip.build(items);
@@ -289,7 +286,7 @@ async function uploadPanels() {
 
   try {
     log('Читаю site.json…');
-    const site = await GH.rawJSON('data/site.json');
+    const site = await GH.apiJSON('data/site.json');
     const [code, idxRaw] = target.split('|');
     const idx = Number(idxRaw);
     const prog = (site.programs || []).find(p => p.code === code);
@@ -362,7 +359,7 @@ async function uploadSchematics() {
 
   try {
     log('Читаю site.json…');
-    const site = await GH.rawJSON('data/site.json');
+    const site = await GH.apiJSON('data/site.json');
     site.schematics = site.schematics || [];
     site.pults = site.pults || [];
     const dir = progCode
@@ -409,7 +406,7 @@ async function createUser() {
   if (!login || !pass) return log('Укажите логин и пароль.');
   if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
   try {
-    const data = await GH.rawJSON('data/users.json');
+    const data = await GH.apiJSON('data/users.json');
     if (data.users.some(u => u.login.toLowerCase() === login.toLowerCase()))
       return log('Логин «' + login + '» уже существует.');
     const salt = [...crypto.getRandomValues(new Uint8Array(8))]
@@ -433,7 +430,7 @@ $('#eye-token').addEventListener('click', () => {
 $('#b-token').addEventListener('click', () => {
   GH.setToken($('#u-token').value);
   $('#token-status').textContent = GH.hasToken() ? 'токен сохранён' : 'пусто';
-  if (GH.hasToken()) $('#token-box').open = false;
+  if (GH.hasToken()) { $('#token-box').open = false; reload(); }
 });
 $('#v-plcfile').addEventListener('change', () => {
   const f = $('#v-plcfile').files[0];

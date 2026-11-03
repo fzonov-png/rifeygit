@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '7';
+const APP_VERSION = '8';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
