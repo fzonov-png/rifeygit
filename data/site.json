@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03T14:03:33",
+  "updated": "2026-11-03T14:06:14",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -25,7 +25,42 @@
             "name": "plc_e2e.ap15",
             "size": 13
           },
-          "panels": []
+          "panels": [
+            {
+              "version": "1.0",
+              "hmi_type": "ПУ-ТЕСТ",
+              "message": "первая панель",
+              "author": "Инженер-программист",
+              "created_at": "2026-11-03T14:06:14",
+              "file": {
+                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/hmi_panel_1.0.emtp",
+                "name": "panel_1.0.emtp",
+                "size": 12
+              },
+              "kit": {
+                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
+                "name": "E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
+                "size": 251
+              }
+            },
+            {
+              "version": "1.1",
+              "hmi_type": "ПУ-ТЕСТ",
+              "message": "вторая панель",
+              "author": "Инженер-программист",
+              "created_at": "2026-11-03T14:06:14",
+              "file": {
+                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/hmi_panel_1.1.emtp",
+                "name": "panel_1.1.emtp",
+                "size": 12
+              },
+              "kit": {
+                "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
+                "name": "E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
+                "size": 251
+              }
+            }
+          ]
         }
       ]
     }
