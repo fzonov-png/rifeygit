@@ -56,8 +56,7 @@ const GH = {
 
   /* Читать файл через API (без CDN-кэша). Нужно странице загрузки: сразу после
    * коммита raw.githubusercontent ещё отдаёт старую версию site.json. */
-  async apiText(path) {
-    const r = await this.api('GET', '/repos/' + GH_REPO + '/contents/' + path +
+  async apiText(path) {    const r = await this.api('GET', '/repos/' + GH_REPO + '/contents/' + path +
       '?ref=' + GH_BRANCH + '&t=' + Date.now());
     if (!r.ok) throw new Error('не удалось прочитать ' + path + ' (HTTP ' + r.status +
       ': ' + await this.errBody(r) + ')');
@@ -66,6 +65,35 @@ const GH = {
   },
 
   async apiJSON(path) { return JSON.parse(await this.apiText(path)); },
+
+  /* site.json для главной страницы: свежие данные через API, при лимите API —
+   * CDN, при отсутствии сети — последняя копия из localStorage. */
+  async siteJSON() {
+    try {
+      const r = await fetch('https://api.github.com/repos/' + GH_REPO +
+        '/contents/data/site.json?ref=' + GH_BRANCH + '&t=' + Date.now(),
+        { cache: 'no-store', headers: { 'Accept': 'application/vnd.github+json' } });
+      if (r.ok) {
+        const j = await r.json();
+        if (j.content) {
+          const txt = new TextDecoder().decode(this.b64bytes(j.content));
+          const data = JSON.parse(txt);
+          try { localStorage.setItem('rifeygit_site_cache', txt); } catch { /* приватный режим */ }
+          return data;
+        }
+      }
+    } catch { /* нет сети / API недоступен */ }
+    try {
+      const txt = await this.rawText('data/site.json');
+      const data = JSON.parse(txt);
+      try { localStorage.setItem('rifeygit_site_cache', txt); } catch { /* приватный режим */ }
+      return data;
+    } catch (e) {
+      const cached = localStorage.getItem('rifeygit_site_cache');
+      if (cached) return JSON.parse(cached);
+      throw e;
+    }
+  },
 
   b64bytes(b64) {
     const bin = atob(String(b64).replace(/\s/g, ''));

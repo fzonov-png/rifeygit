@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -64,12 +64,20 @@ function autofillEquipment() {
 
 /* ---------- загрузка данных ---------- */
 async function loadSite() {
-  SITE = await GH.rawJSON('data/site.json');
+  SITE = await GH.siteJSON();
   SITE.programs = SITE.programs || [];
   SITE.schematics = SITE.schematics || [];
   SITE.equipment = SITE.equipment || [];
   const upd = SITE.updated ? SITE.updated.replace('T', ' ') : '';
   $('#foot-updated').textContent = upd ? 'Данные обновлены: ' + upd : 'Данные ещё не загружены';
+}
+
+/* users.json: с токеном — через API (видно правку сразу), без токена — CDN. */
+async function readUsers() {
+  if (GH.hasToken()) {
+    try { return await GH.apiJSON('data/users.json'); } catch { /* перейдём на CDN */ }
+  }
+  return GH.rawJSON('data/users.json');
 }
 
 /* ---------- вкладки ---------- */
@@ -335,7 +343,7 @@ async function saveEquipment(ev) {
 
 /* ---------- пользователи ---------- */
 function renderUsers() {
-  GH.rawJSON('data/users.json').then(data => {
+  readUsers().then(data => {
     $('#us-list').innerHTML = `<h3>Пользователи</h3><div class="tbl-wrap"><table>
       <tr><th>Логин</th><th>ФИО / подпись</th><th>Роль</th><th>Активен</th><th></th></tr>
       ${data.users.map(u => `<tr>
@@ -354,7 +362,7 @@ function renderUsers() {
 async function mutateUsers(fn, msgSel, what) {
   const msg = $(msgSel);
   try {
-    const data = await GH.rawJSON('data/users.json');
+    const data = await readUsers();
     fn(data.users);
     data.users.sort((a, b) => a.login.localeCompare(b.login));
     msg.textContent = 'Записываю в GitHub…';
@@ -390,7 +398,7 @@ async function changePasswordFix(ev) {
   const login = $('#pf-login').value.trim();
   const pass = $('#pf-pass').value;
   if (!login || !pass) return;
-  const data = await GH.rawJSON('data/users.json');
+  const data = await readUsers();
   const u = data.users.find(x => x.login.toLowerCase() === login.toLowerCase());
   if (!u) { $('#pf-msg').textContent = 'логин не найден'; return; }
   const salt = [...crypto.getRandomValues(new Uint8Array(8))]
