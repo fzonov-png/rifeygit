@@ -1,10 +1,35 @@
 {
-  "updated": null,
+  "updated": "2026-11-03T14:29:31",
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М"
+    "ПУ-Б2-М",
+    "ПУ-ПРОВЕРКА"
   ],
-  "programs": [],
+  "programs": [
+    {
+      "code": "CHKDEMO",
+      "name": "Проверка загрузки",
+      "target": "",
+      "plant_type": "",
+      "description": "",
+      "deleted": false,
+      "versions": [
+        {
+          "version": "1.0",
+          "pult": "ПУ-ПРОВЕРКА",
+          "message": "без описания",
+          "author": "Инженер-программист",
+          "created_at": "2026-11-03T14:29:31",
+          "plc": {
+            "path": "data/files/programs/CHKDEMO/ПУ-ПРОВЕРКА/1.0/plc_check.ap15",
+            "name": "check.ap15",
+            "size": 14
+          },
+          "panels": []
+        }
+      ]
+    }
+  ],
   "schematics": [],
   "equipment": []
 }
