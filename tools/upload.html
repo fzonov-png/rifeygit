@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=8">
+<link rel="stylesheet" href="../style.css?v=9">
 </head>
 <body>
 <div class="screen">
@@ -92,7 +92,10 @@
     </div>
     <label>Файлы схем * <input type="file" id="s-files" multiple></label>
     <div id="s-list" class="pick-list"></div>
-    <button id="b-schem" class="primary">Загрузить схемы</button>
+    <div class="row">
+      <button id="b-schem" class="primary">Загрузить схемы</button>
+      <button id="b-rekit" class="ghost">Пересобрать комплекты пульта</button>
+    </div>
   </div>
 
   <div class="card">
@@ -121,8 +124,8 @@
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=8"></script>
-<script src="../zip.js?v=8"></script>
+<script src="../gh.js?v=9"></script>
+<script src="../zip.js?v=9"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -367,6 +370,7 @@ async function uploadSchematics() {
       : `data/files/schematics/common/${pult}`;
     const descs = [...document.querySelectorAll('.pick-desc')];
     const commits = [];
+    const local = new Map();       // путь -> байты (файлы ещё не в репозитории)
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -376,7 +380,9 @@ async function uploadSchematics() {
         description: descs[i] ? descs[i].value.trim() : '',
         updated_at: nowISO(), author,
       };
-      commits.push({ path: rec.file.path, ...(await GH.fileToBlob(file)) });
+      const bytes = await file.arrayBuffer();
+      local.set(rec.file.path, bytes);
+      commits.push({ path: rec.file.path, ...GH.bytesToBlob(bytes) });
       // одноимённый файл заменяем, остальные схемы пульта сохраняем
       site.schematics = site.schematics.filter(s =>
         !((s.pult || '').toLowerCase() === pult.toLowerCase() &&
@@ -388,13 +394,83 @@ async function uploadSchematics() {
 
     if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
     site.updated = nowISO();
+
+    // комплекты этого пульта пересобираем: в них должны попасть новые схемы
+    log('Пересобираю комплекты пульта ' + pult + '…');
+    const kits = await rebuildKits(site, pult, local);
+    commits.push(...kits.commits);
+
     commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
 
     log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…');
     const sha = await GH.commitFiles(commits,
-      `схемы ${pult}${progCode ? ' (' + progCode + ')' : ''}: ${files.length} шт.`);
-    log('Готово. Коммит ' + sha.slice(0, 8) + '. Сайт обновится за 1–10 минут.');
+      `схемы ${pult}${progCode ? ' (' + progCode + ')' : ''}: ${files.length} шт.` +
+      (kits.count ? `, комплектов: ${kits.count}` : ''));
+    log('Готово. Коммит ' + sha.slice(0, 8) +
+      (kits.count ? '. Комплектов пересобрано: ' + kits.count : '') +
+      '. Сайт обновится за 1–10 минут.');
     $('#s-files').value = ''; $('#s-list').innerHTML = '';
+    await reload();
+  } catch (e) { log('Ошибка: ' + e.message); }
+}
+
+/* Пересобрать комплекты всех версий панелей указанного пульта:
+ * ПЛК + панель + все схемы пульта (общие и программные). */
+async function rebuildKits(site, pult, local = new Map()) {
+  const commits = [];
+  let count = 0;
+  const bytesOf = async path =>
+    local.has(path) ? local.get(path) : await GH.fileBytes(path);
+
+  for (const prog of (site.programs || [])) {
+    for (let i = 0; i < (prog.versions || []).length; i++) {
+      const v = normalizeVersion(prog.versions[i]);
+      prog.versions[i] = v;
+      if ((v.pult || '').toLowerCase() !== pult.toLowerCase() || !v.plc) continue;
+      for (const p of (v.panels || [])) {
+        if (!p.file) continue;
+        try {
+          const items = [{ name: v.plc.name, data: await bytesOf(v.plc.path) }];
+          items.push({ name: p.file.name, data: await bytesOf(p.file.path) });
+          for (const s of (site.schematics || [])) {
+            if ((s.pult || '').toLowerCase() !== pult.toLowerCase()) continue;
+            try { items.push({ name: s.file.name, data: await bytesOf(s.file.path) }); }
+            catch (e) { log('Схема не вошла в комплект: ' + s.file.name); }
+          }
+          const zipBlob = await Zip.build(items);
+          const name = p.version
+            ? `${prog.code}_${v.version}_${p.version}_${v.pult}.zip`
+            : `${prog.code}_${v.version}_${v.pult}.zip`;
+          const path = `data/files/programs/${prog.code}/${v.pult}/${v.version}/${name}`;
+          commits.push({ path, ...GH.bytesToBlob(await zipBlob.arrayBuffer()) });
+          p.kit = { path, name, size: zipBlob.size };
+          count++;
+        } catch (e) {
+          log('Комплект не пересобран (' + prog.code + ' ' + v.version + '): ' + e.message);
+        }
+      }
+    }
+  }
+  return { commits, count };
+}
+
+/* Пересобрать комплекты пульта без загрузки файлов (после импорта/правок). */
+async function rebuildOnly() {
+  const pult = $('#s-pult').value.trim();
+  if (!pult) return log('Укажите пульт в разделе 3.');
+  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+  try {
+    log('Читаю site.json…');
+    const site = await GH.apiJSON('data/site.json');
+    site.schematics = site.schematics || [];
+    log('Пересобираю комплекты пульта ' + pult + '…');
+    const kits = await rebuildKits(site, pult);
+    if (!kits.count) return log('У пульта ' + pult + ' нет версий панелей — пересобирать нечего.');
+    site.updated = nowISO();
+    kits.commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
+    log('Записываю в GitHub (' + kits.commits.length + ' файлов)…');
+    const sha = await GH.commitFiles(kits.commits, `комплекты ${pult}: ${kits.count} шт.`);
+    log('Готово. Коммит ' + sha.slice(0, 8) + '. Комплектов: ' + kits.count + '.');
     await reload();
   } catch (e) { log('Ошибка: ' + e.message); }
 }
@@ -441,6 +517,7 @@ $('#s-files').addEventListener('change', schematicRows);
 $('#b-plc').addEventListener('click', uploadPlc);
 $('#b-panels').addEventListener('click', uploadPanels);
 $('#b-schem').addEventListener('click', uploadSchematics);
+$('#b-rekit').addEventListener('click', rebuildOnly);
 $('#b-user').addEventListener('click', createUser);
 
 $('#u-token').value = GH.token();

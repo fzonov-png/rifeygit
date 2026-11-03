@@ -155,14 +155,19 @@ const GH = {
     throw lastErr;
   },
 
-  /* Файл (File из <input type=file>) -> { content, encoding } для blob. */
-  async fileToBlob(file) {
-    const buf = new Uint8Array(await file.arrayBuffer());
+  /* ArrayBuffer -> { content, encoding } для blob. */
+  bytesToBlob(buf) {
+    const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
     let bin = '';
     const CH = 0x8000;
-    for (let i = 0; i < buf.length; i += CH) {
-      bin += String.fromCharCode.apply(null, buf.subarray(i, i + CH));
+    for (let i = 0; i < u8.length; i += CH) {
+      bin += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
     }
     return { content: btoa(bin), encoding: 'base64' };
+  },
+
+  /* Файл (File из <input type=file>) -> { content, encoding } для blob. */
+  async fileToBlob(file) {
+    return this.bytesToBlob(await file.arrayBuffer());
   },
 };
