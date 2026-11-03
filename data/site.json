@@ -1,10 +1,35 @@
 {
-  "updated": null,
+  "updated": "2026-11-03T14:03:33",
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М"
+    "ПУ-Б2-М",
+    "ПУ-ТЕСТ"
   ],
-  "programs": [],
+  "programs": [
+    {
+      "code": "E2EDEMO",
+      "name": "Тестовая программа E2E",
+      "target": "",
+      "plant_type": "ТЕСТ",
+      "description": "",
+      "deleted": false,
+      "versions": [
+        {
+          "version": "1.0",
+          "pult": "ПУ-ТЕСТ",
+          "message": "сквозная проверка",
+          "author": "Инженер-программист",
+          "created_at": "2026-11-03T14:03:33",
+          "plc": {
+            "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/plc_plc_e2e.ap15",
+            "name": "plc_e2e.ap15",
+            "size": 13
+          },
+          "panels": []
+        }
+      ]
+    }
+  ],
   "schematics": [],
   "equipment": []
 }
