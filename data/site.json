@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03T14:06:14",
+  "updated": "2026-11-03T14:06:35",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -65,6 +65,31 @@
       ]
     }
   ],
-  "schematics": [],
+  "schematics": [
+    {
+      "pult": "ПУ-ТЕСТ",
+      "program": null,
+      "file": {
+        "path": "data/files/schematics/common/ПУ-ТЕСТ/schema_a.pdf",
+        "name": "schema_a.pdf",
+        "size": 12
+      },
+      "description": "общая схема",
+      "updated_at": "2026-11-03T14:06:35",
+      "author": "Инженер-программист"
+    },
+    {
+      "pult": "ПУ-ТЕСТ",
+      "program": null,
+      "file": {
+        "path": "data/files/schematics/common/ПУ-ТЕСТ/schema_b.pdf",
+        "name": "schema_b.pdf",
+        "size": 12
+      },
+      "description": "схема шкафа",
+      "updated_at": "2026-11-03T14:06:35",
+      "author": "Инженер-программист"
+    }
+  ],
   "equipment": []
 }
