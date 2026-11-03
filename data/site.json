@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-03T14:06:35",
+  "updated": "2026-11-03T14:08:19",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -40,7 +40,7 @@
               "kit": {
                 "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
                 "name": "E2EDEMO_1.0_1.0_ПУ-ТЕСТ.zip",
-                "size": 251
+                "size": 475
               }
             },
             {
@@ -57,7 +57,7 @@
               "kit": {
                 "path": "data/files/programs/E2EDEMO/ПУ-ТЕСТ/1.0/E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
                 "name": "E2EDEMO_1.0_1.1_ПУ-ТЕСТ.zip",
-                "size": 251
+                "size": 475
               }
             }
           ]
