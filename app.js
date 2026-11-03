@@ -1,5 +1,18 @@
-/* RifeyGit — статическая версия: логика daшборда (вход, вкладки, записи в GitHub). */
+/* RifeyGit — статическая версия: главная страница (после входа).
+ *
+ * Модель данных (data/site.json):
+ *   program.versions[] = {
+ *     version, pult, message, author, created_at,
+ *     plc:    { path, name, size },                 // программа ПЛК
+ *     panels: [{ version, hmi_type, message,        // версии панели к этой ПЛК
+ *                file: { path, name, size },
+ *                kit:  { path, name, size } | null }]
+ *   }
+ * Старый формат (files: { plc, hmi, kit }) читается и показывается так же.
+ */
 'use strict';
+
+const APP_VERSION = '6';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -17,108 +30,25 @@ const nowISO = () => new Date().toISOString().slice(0, 19);
 let SITE = null;            // data/site.json
 let USER = null;            // {login, role, full_name}
 const isEngineer = () => USER && (USER.role === 'admin' || USER.role === 'engineer');
-const canDownload = () => USER && (isEngineer() || guardOK());
 
-/* ---------- вход ---------- */
-const APP_VERSION = '5';
-
-async function doLogin(ev) {
-  ev.preventDefault();
-  const err = $('#login-error');
-  const btn = $('#btn-login');
-  const btnText = $('#btn-login-text');
-  err.hidden = true;
-  const login = $('#login-user').value.trim();
-  const pass = $('#login-pass').value.trim();
-  if (!login) { err.textContent = 'Введите логин'; err.hidden = false; $('#login-user').focus(); return; }
-  if (!pass) { err.textContent = 'Введите пароль'; err.hidden = false; $('#login-pass').focus(); return; }
-  btn.disabled = true;
-  if (btnText) btnText.textContent = 'Проверяю…';
-  try {
-    const data = await (await fetch('data/users.json', { cache: 'no-store' })).json();
-    const u = data.users.find(x => x.login.toLowerCase() === login.toLowerCase() && x.active !== false);
-    if (u) {
-      const hash = await sha256hex(u.salt + '\0' + u.login.toLowerCase() + '\0' + pass);
-      if (hash === u.hash) {
-        USER = { login: u.login, role: u.role, full_name: u.full_name || u.login };
-        try { localStorage.setItem('rifeygit_user', JSON.stringify(USER)); }
-        catch { /* приватный режим: работаем без сохранения сессии */ }
-        return enterApp();
-      }
-    }
-    err.textContent = 'Неверный логин или пароль. Проверьте раскладку клавиатуры и Caps Lock.';
-    err.hidden = false;
-  } catch (e) {
-    err.textContent = 'Не удалось проверить вход: ' + e.message;
-    err.hidden = false;
-  } finally {
-    btn.disabled = false;
-    if (btnText) btnText.textContent = 'Войти';
-  }
-}
-
-/* ---------- диагностика входа (для «Не получается войти?») ---------- */
-async function runDiag() {
-  const out = $('#diag-out');
-  out.hidden = false;
-  out.textContent = 'Проверяю…';
-  const lines = [
-    'Версия сайта: ' + APP_VERSION,
-    'Браузер: ' + navigator.userAgent,
-    'Скрипты: работают',
-    'crypto.subtle: ' + (window.crypto && crypto.subtle ? 'да' : 'НЕТ'),
-  ];
-  try {
-    localStorage.setItem('__rifey_test', '1');
-    localStorage.removeItem('__rifey_test');
-    lines.push('localStorage: да');
-  } catch (e) { lines.push('localStorage: НЕТ (' + e.message + ')'); }
-  const t0 = Date.now();
-  try {
-    const r = await fetch('data/users.json?d=' + Date.now(), { cache: 'no-store' });
-    const j = await r.json();
-    lines.push('Данные учёток: HTTP ' + r.status + ', записей: ' + (j.users || []).length +
-      ', ' + (Date.now() - t0) + ' мс');
-  } catch (e) {
-    lines.push('Данные учёток: ОШИБКА ' + e.message);
-  }
-  out.textContent = lines.join('\n');
+/* ---------- вход / выход ---------- */
+function restoreSession() {
+  try { return JSON.parse(localStorage.getItem('rifeygit_user') || 'null'); }
+  catch { return null; }
 }
 
 function logout() {
   localStorage.removeItem('rifeygit_user');
-  location.hash = '';
-  location.reload();
+  location.replace('login.html');
 }
 
-/* ---------- загрузка данных ---------- */
-async function loadSite() {
-  SITE = await GH.rawJSON('data/site.json');
-  $('#foot-updated').textContent = SITE.updated
-    ? 'Данные обновлены: ' + SITE.updated.replace('T', ' ')
-    : 'Данные ещё не загружены';
-}
-
-/* ---------- вкладки ---------- */
-function showTab(name) {
-  document.querySelectorAll('.tab').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === name));
-  document.querySelectorAll('.panel').forEach(p => p.hidden = true);
-  $('#tabpanel-' + name).hidden = false;
-  if (name === 'download') renderDownload();
-  if (name === 'programs') renderProgramsTab();
-  if (name === 'equipment') renderEquipment();
-  if (name === 'users') renderUsers();
-}
-
-/* ---------- блокировка скачивания (обязательные поля наладчика) ---------- */
 function guardOK() {
   return !!$('#dl-factory').value.trim() && !!$('#dl-purpose').value.trim();
 }
 
 function updateGuard() {
   $('#dl-ok').hidden = !guardOK();
-  renderDownload();              // и блокировать, и разблокировать список
+  renderDownload();
 }
 
 function autofillEquipment() {
@@ -130,6 +60,29 @@ function autofillEquipment() {
     $('#dl-city').value = eq.city || '';
     $('#dl-customer').value = eq.customer || '';
   }
+}
+
+/* ---------- загрузка данных ---------- */
+async function loadSite() {
+  SITE = await GH.rawJSON('data/site.json');
+  SITE.programs = SITE.programs || [];
+  SITE.schematics = SITE.schematics || [];
+  SITE.equipment = SITE.equipment || [];
+  const upd = SITE.updated ? SITE.updated.replace('T', ' ') : '';
+  $('#foot-updated').textContent = upd ? 'Данные обновлены: ' + upd : 'Данные ещё не загружены';
+}
+
+/* ---------- вкладки ---------- */
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.hidden = true);
+  const panel = $('#tabpanel-' + name);
+  if (panel) panel.hidden = false;
+  if (name === 'download') renderDownload();
+  if (name === 'programs') renderProgramsTab();
+  if (name === 'equipment') renderEquipment();
+  if (name === 'users') renderUsers();
 }
 
 /* ---------- журнал локальных скачиваний + отчёт ---------- */
@@ -159,11 +112,16 @@ function reportText() {
 }
 
 /* ---------- скачивание ---------- */
+function canDownload() {
+  return !!USER && (isEngineer() || guardOK());
+}
+
 function downloadFile(path, label) {
   if (!canDownload()) {
     alert('Сначала заполните обязательные данные для скачивания (вкладка «Скачать»).');
     return;
   }
+  if (!path) { alert('Файл не найден в записи версии.'); return; }
   logDownload(label);
   const a = document.createElement('a');
   a.href = GH.siteFileURL(path);
@@ -173,21 +131,64 @@ function downloadFile(path, label) {
   a.remove();
 }
 
-/* ---------- отрисовка: программы ---------- */
-function versionRow(v, files, forProgram) {
-  const p = esc(v.pult || '—');
-  const bits = [];
-  if (files.plc) bits.push(
-    `<button class="dl-btn" data-dl="${esc(files.plc.path)}" data-label="ПЛК ${esc(forProgram)} ${esc(v.version)}">ПЛК</button>`);
-  if (files.hmi) bits.push(
-    `<button class="dl-btn" data-dl="${esc(files.hmi.path)}" data-label="панель ${esc(forProgram)} ${esc(v.version)}">Панель</button>`);
-  if (files.kit) bits.push(
-    `<button class="dl-btn kit" data-dl="${esc(files.kit.path)}" data-label="комплект ${esc(forProgram)} ${esc(v.version)} (${p})">Комплект&nbsp;zip</button>`);
+/* ---------- модель версии: старый и новый формат ---------- */
+function normalizeVersion(v) {
+  if (Array.isArray(v.panels)) {
+    return {
+      version: v.version, pult: v.pult || '', message: v.message || '',
+      author: v.author || '', created_at: v.created_at || '',
+      plc: v.plc || null, panels: v.panels, kit: null,
+    };
+  }
+  const files = v.files || {};
+  const panels = [];
+  if (files.hmi) {
+    panels.push({
+      version: v.version_hmi || '', hmi_type: v.hmi_type || '', message: '',
+      file: files.hmi, kit: files.kit || null,
+    });
+  }
+  return {
+    version: v.version, pult: v.pult || '', message: v.message || '',
+    author: v.author || '', created_at: v.created_at || '',
+    plc: files.plc || null, panels, kit: files.kit || null,
+  };
+}
+
+function fileRow(kind, file, label, isKit) {
+  if (!file) return '';
+  return `<div class="file-row">
+    <span class="file-kind${isKit ? ' kit' : ''}">${esc(kind)}</span>
+    <span class="file-name" title="${esc(file.name)}">${esc(file.name)}</span>
+    <button class="dl-btn${isKit ? ' kit' : ''}" data-dl="${esc(file.path)}"
+            data-label="${esc(label)}">${isKit ? 'Комплект zip' : 'Скачать'}</button>
+  </div>`;
+}
+
+function versionBlock(prog, raw) {
+  const v = normalizeVersion(raw);
+  const base = `${prog.code} ${v.version}`;
+  const rows = [];
+  if (v.plc) rows.push(fileRow('ПЛК', v.plc, 'ПЛК ' + base, false));
+  for (const p of (v.panels || [])) {
+    const pv = p.version ? ' ' + p.version : '';
+    rows.push(fileRow('Панель' + pv, p.file,
+      'панель ' + base + pv + (p.hmi_type ? ' (' + p.hmi_type + ')' : ''), false));
+    if (p.kit) rows.push(fileRow('Комплект', p.kit, 'комплект ' + base + pv, true));
+  }
+  // старый общеверсионный комплект
+  if (v.kit && !(v.panels || []).some(p => p.kit)) {
+    rows.push(fileRow('Комплект', v.kit, 'комплект ' + base, true));
+  }
+  const meta = [v.pult ? 'пульт: ' + v.pult : '', v.author ? 'автор: ' + v.author : '']
+    .filter(Boolean).join(' · ');
   return `<div class="ver">
-    <span class="ver-num">${esc(v.version)}</span>
-    <span class="pg-meta">пульт: ${p}</span>
-    <span class="ver-msg">${esc(v.message || '')}</span>
-    ${bits.join(' ')}
+    <div class="ver-head">
+      <span class="ver-num">${esc(v.version)}</span>
+      <span class="pg-meta">${esc(meta)}</span>
+      ${v.message ? `<span class="ver-msg">${esc(v.message)}</span>` : ''}
+    </div>
+    ${rows.join('') || '<div class="file-row"><span class="file-name">файлов нет</span></div>'}
   </div>`;
 }
 
@@ -195,56 +196,69 @@ function programCard(prog) {
   if (prog.deleted) return '';
   const vers = [...(prog.versions || [])].reverse();
   const rows = vers.length
-    ? vers.map(v => versionRow(v, v.files || {}, prog.code)).join('')
+    ? vers.map(v => versionBlock(prog, v)).join('')
     : '<div class="ver"><span class="ver-msg">версий пока нет</span></div>';
+  const meta = [prog.plant_type, prog.target].filter(Boolean).join(' · ');
   return `<div class="pg">
     <div class="pg-head">
       <span class="pg-code">${esc(prog.code)}</span>
-      <span>${esc(prog.name)}</span>
-      <span class="pg-meta">${esc(prog.plant_type || '')} ${esc(prog.target || '')}</span>
+      <span class="pg-title">${esc(prog.name)}</span>
+      ${meta ? `<span class="pg-meta">${esc(meta)}</span>` : ''}
     </div>
     ${prog.description ? `<div class="pg-meta">${esc(prog.description)}</div>` : ''}
     ${rows}
   </div>`;
 }
 
+function emptyPrograms() {
+  return `<div class="empty">
+    <div class="empty-title">Программ пока нет</div>
+    <p class="hint">Версии появятся здесь сразу после загрузки инженером.
+      ${isEngineer() ? '<a class="btn ghost" href="tools/upload.html">Загрузить версию</a>' : ''}</p>
+  </div>`;
+}
+
+/* ---------- отрисовка: скачать ---------- */
 function renderDownload() {
   const locked = USER.role === 'naladchik' && !guardOK();
   $('#dl-guard').hidden = USER.role !== 'naladchik';
   $('#dl-programs').innerHTML =
-    (SITE.programs || []).map(programCard).join('') ||
-    '<p class="hint">Программы ещё не загружены.</p>';
+    (SITE.programs || []).map(programCard).join('') || emptyPrograms();
   document.querySelectorAll('#dl-programs .dl-btn').forEach(b => {
     b.disabled = locked;
     b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
   });
 }
 
+/* ---------- отрисовка: программы и схемы ---------- */
 function renderProgramsTab() {
   const locked = USER.role === 'naladchik' && !guardOK();
   $('#pg-lock').hidden = !locked;
   $('#pg-programs').innerHTML =
-    (SITE.programs || []).map(programCard).join('') ||
-    '<p class="hint">Программы ещё не загружены.</p>';
+    (SITE.programs || []).map(programCard).join('') || emptyPrograms();
   document.querySelectorAll('#pg-programs .dl-btn').forEach(b => {
     b.disabled = locked;
     b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
   });
 
-  // схемы: общие по пульту + привязанные к программе
   const schems = SITE.schematics || [];
   if (!schems.length) {
     $('#pg-schematics').innerHTML = '<p class="hint">Схемы пока не загружены.</p>';
   } else {
     const byPult = {};
     for (const s of schems) (byPult[s.pult] = byPult[s.pult] || []).push(s);
-    $('#pg-schematics').innerHTML = Object.keys(byPult).map(pult => `
+    $('#pg-schematics').innerHTML = Object.keys(byPult).sort().map(pult => `
       <div class="pg">
-        <div class="pg-head"><span class="pg-code">${esc(pult)}</span></div>
+        <div class="pg-head">
+          <span class="pg-code">${esc(pult)}</span>
+          <span class="pg-meta">схем: ${byPult[pult].length}</span>
+        </div>
         ${byPult[pult].map(s => `
-          <div class="ver">
-            <span class="ver-msg">${esc(s.file.name)}${s.program ? ' (программа ' + esc(s.program) + ')' : ' (общая)'}${s.description ? ' — ' + esc(s.description) : ''}</span>
-            <button class="dl-btn" data-dl="${esc(s.file.path)}" data-label="схема ${esc(pult)}">Скачать</button>
+          <div class="file-row">
+            <span class="file-kind${s.program ? ' prog' : ''}">${s.program ? 'программа ' + esc(s.program) : 'общая'}</span>
+            <span class="file-name" title="${esc(s.file.name)}">${esc(s.file.name)}</span>
+            ${s.description ? `<span class="file-desc">${esc(s.description)}</span>` : ''}
+            <button class="dl-btn" data-dl="${esc(s.file.path)}" data-label="схема ${esc(pult)}${s.program ? ' (' + esc(s.program) + ')' : ''}">Скачать</button>
           </div>`).join('')}
       </div>`).join('');
     document.querySelectorAll('#pg-schematics .dl-btn').forEach(b => {
@@ -398,7 +412,6 @@ async function toggleUser(login) {
 
 /* ---------- запуск ---------- */
 async function enterApp() {
-  $('#screen-login').hidden = true;
   $('#screen-app').hidden = false;
   $('#who-name').textContent = USER.full_name + ' (' + USER.login + ')';
   $('#avatar').textContent = (USER.full_name || USER.login).trim().charAt(0).toUpperCase();
@@ -417,17 +430,9 @@ async function enterApp() {
 
 function boot() {
   window.RIFEY_BOOTED = true;
-  const lr = $('#link-reload');
-  if (lr) lr.href = './?fresh=' + Date.now();
-  const diag = $('#btn-diag');
-  if (diag) diag.addEventListener('click', runDiag);
-  // показ/скрытие пароля
-  document.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => {
-    const inp = document.getElementById(b.dataset.eye);
-    inp.type = inp.type === 'password' ? 'text' : 'password';
-  }));
+  USER = restoreSession();
+  if (!USER) { location.replace('login.html'); return; }
 
-  $('#login-form').addEventListener('submit', doLogin);
   $('#btn-logout').addEventListener('click', logout);
   document.querySelectorAll('.tab').forEach(b =>
     b.addEventListener('click', () => showTab(b.dataset.tab)));
@@ -442,7 +447,6 @@ function boot() {
   $('#us-form').addEventListener('submit', createUser);
   $('#pw-form').addEventListener('submit', changePasswordFix);
 
-  // отчёт
   $('#btn-report').addEventListener('click', () => {
     $('#report-text').value = reportText();
     $('#dlg-report').showModal();
@@ -456,11 +460,7 @@ function boot() {
     window.open('https://wa.me/?text=' + encodeURIComponent(reportText()), '_blank');
   });
 
-  // восстановление сессии
-  try {
-    const s = JSON.parse(localStorage.getItem('rifeygit_user') || 'null');
-    if (s && s.login) { USER = s; enterApp(); return; }
-  } catch { /* нет сессии */ }
+  enterApp();
 }
 
 document.addEventListener('DOMContentLoaded', boot);

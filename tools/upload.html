@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RifeyGit — загрузка версий и схем</title>
-<link rel="stylesheet" href="../style.css">
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<meta name="color-scheme" content="light dark">
+<title>Загрузка — RifeyGit</title>
+<link rel="stylesheet" href="../style.css?v=6">
 </head>
 <body>
 <div class="screen">
@@ -27,38 +27,35 @@
 
   <div class="card">
     <h2>Загрузка версий и схем</h2>
-    <p class="hint">Вставьте GitHub-токен один раз (сохранится в этом браузере).
-      Токен: fine-grained, <b>Contents — Read and write</b> на репозиторий RifeyGit.
-      <a href="https://github.com/settings/personal-access-tokens" target="_blank">Создать токен</a></p>
-    <label>GitHub-токен
-      <span class="pw-wrap">
-        <input id="u-token" type="password" placeholder="ghp_… или github_pat_…">
-        <button type="button" class="eye" id="eye-token" title="Показать">&#128065;</button>
-      </span>
-    </label>
-    <button id="b-token" class="primary">Сохранить токен</button>
-    <span id="token-status" class="hint"></span>
+    <p class="hint">Одна версия программы ПЛК может иметь несколько версий программы панели.
+       К одному пульту можно прикрепить несколько схем.</p>
+    <details id="token-box">
+      <summary>GitHub-токен</summary>
+      <p class="hint">Fine-grained токен с правом <b>Contents — Read and write</b> на этот
+         репозиторий. Хранится только в этом браузере.</p>
+      <label>Токен
+        <span class="pw-wrap">
+          <input id="u-token" type="password" placeholder="github_pat_…">
+          <button type="button" class="eye" id="eye-token" title="Показать">&#128065;</button>
+        </span>
+      </label>
+      <div class="row">
+        <button id="b-token" class="primary">Сохранить токен</button>
+        <span id="token-status" class="hint"></span>
+      </div>
+    </details>
   </div>
 
   <div class="card">
-    <h3>1. Новая версия программы (пара ПЛК + панель)</h3>
+    <h3>1. Версия программы ПЛК</h3>
     <div class="grid2">
-      <label>Код программы * <input id="v-code" list="code-list" placeholder="напр. BZ120"></label>
-      <label>Версия * <input id="v-ver" placeholder="напр. 3.2"></label>
-      <label>Версия ПЛК <input id="v-plc" placeholder="если отличается"></label>
-      <label>Версия панели (HMI) <input id="v-hmi"></label>
-      <label>Тип панели <input id="v-hmitype" placeholder="ПУ-БЗ и т.п."></label>
-      <label>Пульт * <input id="v-pult" list="pult-list"></label>
+      <label>Код программы * <input id="v-code" list="code-list" placeholder="напр. BZ120" autocapitalize="characters"></label>
+      <label>Пульт * <input id="v-pult" list="pult-list" placeholder="напр. ПУ-БЗ"></label>
+      <label>Версия ПЛК * <input id="v-ver" placeholder="напр. 3.2"></label>
+      <label>Сообщение (что изменилось) * <input id="v-msg"></label>
     </div>
-    <label>Сообщение (что изменилось) * <input id="v-msg"></label>
     <label>Файл программы ПЛК * <input type="file" id="v-plcfile"></label>
-    <label>Файл панели оператора (HMI) * <input type="file" id="v-hmifile"></label>
-    <label><input type="checkbox" id="v-kit" checked style="width:auto">
-      Собрать комплектный архив <code>&lt;код&gt;_&lt;версия&gt;_&lt;пульт&gt;.zip</code> (ПЛК + панель)</label>
-    <label><input type="checkbox" id="v-schem" checked style="width:auto">
-      Добавить в комплект схему пульта (если загружена)</label>
-
-    <details id="v-newprog" style="margin:8px 0">
+    <details id="v-newprog">
       <summary>Программы нет в списке — создать новую</summary>
       <div class="grid2">
         <label>Название * <input id="v-name" placeholder="Бетонзавод БЗ-120"></label>
@@ -66,25 +63,42 @@
         <label>Назначение / объект <input id="v-target"></label>
       </div>
     </details>
-
-    <button id="b-upload" class="primary">Загрузить версию в GitHub</button>
+    <button id="b-plc" class="primary">Загрузить версию ПЛК</button>
   </div>
 
   <div class="card">
-    <h3>2. Схема пульта</h3>
+    <h3>2. Версии панели (HMI) к версии ПЛК</h3>
+    <p class="hint">Выберите уже загруженную версию ПЛК и добавьте одну или несколько
+       версий панели — можно сразу несколько файлов.</p>
+    <div class="grid2">
+      <label>Версия ПЛК * <select id="p-target"></select></label>
+      <label>Тип панели <input id="p-hmitype" placeholder="напр. ПУ-БЗ"></label>
+    </div>
+    <label>Файлы панели * <input type="file" id="p-files" multiple></label>
+    <div id="p-list" class="pick-list"></div>
+    <label><input type="checkbox" id="p-kit" checked style="width:auto">
+      Собирать комплектный архив <code>&lt;код&gt;_&lt;версия ПЛК&gt;_&lt;версия панели&gt;_&lt;пульт&gt;.zip</code>
+      (ПЛК + панель + все схемы пульта)</label>
+    <button id="b-panels" class="primary">Загрузить панели</button>
+  </div>
+
+  <div class="card">
+    <h3>3. Схемы пульта</h3>
+    <p class="hint">К одному пульту можно добавить сколько угодно схем: общие и привязанные
+       к программе. Одноимённые файлы заменяются.</p>
     <div class="grid2">
       <label>Пульт * <input id="s-pult" list="pult-list"></label>
       <label>Программа (пусто — общая схема) <input id="s-prog" list="code-list"></label>
     </div>
-    <label>Файл схемы (PDF/DWG/DXF/SVG/PNG/JPG) * <input type="file" id="s-file"></label>
-    <label>Описание <input id="s-desc"></label>
-    <button id="b-schem" class="primary">Загрузить схему в GitHub</button>
+    <label>Файлы схем * <input type="file" id="s-files" multiple></label>
+    <div id="s-list" class="pick-list"></div>
+    <button id="b-schem" class="primary">Загрузить схемы</button>
   </div>
 
   <div class="card">
-    <h3>3. Новый пользователь</h3>
+    <h3>4. Новый пользователь</h3>
     <div class="grid2">
-      <label>Логин * <input id="u-login"></label>
+      <label>Логин * <input id="u-login" autocapitalize="none"></label>
       <label>Пароль * <input id="u-pass"></label>
       <label>ФИО / подпись <input id="u-fio"></label>
       <label>Роль
@@ -107,19 +121,28 @@
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js"></script>
+<script src="../gh.js?v=6"></script>
+<script src="../zip.js?v=6"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
 const log = m => { $('#log').textContent = m; console.log('[rifeygit]', m); };
 const nowISO = () => new Date().toISOString().slice(0, 19);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+let SITE = null;
+let USER = null;
+try { USER = JSON.parse(localStorage.getItem('rifeygit_user') || 'null'); } catch { USER = null; }
+if (!USER) location.replace('../login.html');
+else if (USER.role === 'naladchik') location.replace('../index.html');
+const author = USER ? (USER.full_name || USER.login) : '';
 
 async function sha256hex(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-/* raw-бинарник (свежий коммит, без задержки Pages) */
 async function rawBinary(path) {
   const url = 'https://raw.githubusercontent.com/' + GH_REPO + '/' + GH_BRANCH + '/' + encodeURI(path);
   const r = await fetch(url, { cache: 'no-store' });
@@ -127,31 +150,64 @@ async function rawBinary(path) {
   return r.arrayBuffer();
 }
 
-async function refreshLists() {
+function normalizeVersion(v) {
+  if (Array.isArray(v.panels)) return v;
+  const files = v.files || {};
+  const panels = [];
+  if (files.hmi) panels.push({
+    version: v.version_hmi || '', hmi_type: v.hmi_type || '', message: '',
+    file: files.hmi, kit: files.kit || null, created_at: v.created_at || '', author: v.author || '',
+  });
+  return {
+    version: v.version, pult: v.pult || '', message: v.message || '',
+    author: v.author || '', created_at: v.created_at || '',
+    plc: files.plc || null, panels, kit: null,
+  };
+}
+
+const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+
+function refreshUi() {
+  if (!SITE) return;
+  const codes = [...new Set((SITE.programs || []).map(p => p.code))];
+  $('#code-list').innerHTML = codes.map(c => `<option value="${esc(c)}">`).join('');
+  $('#pult-list').innerHTML = (SITE.pults || []).map(p => `<option value="${esc(p)}">`).join('');
+
+  const opts = [];
+  (SITE.programs || []).forEach(prog => {
+    (prog.versions || []).forEach((v, i) => {
+      opts.push(`<option value="${esc(prog.code)}|${i}">${esc(prog.code)} · ${esc(v.version)} · ${esc(v.pult || '')}</option>`);
+    });
+  });
+  $('#p-target').innerHTML = opts.join('') || '<option value="">— сначала загрузите версию ПЛК —</option>';
+}
+
+async function reload() {
   try {
-    const site = await GH.rawJSON('data/site.json');
-    $('#code-list').innerHTML = site.programs.map(p => `<option value="${p.code}">`).join('');
-    $('#pult-list').innerHTML = (site.pults || []).map(p => `<option value="${p}">`).join('');
-    log('Списки заполнены: программ ' + site.programs.length + ', пультов ' + (site.pults || []).length);
+    SITE = await GH.rawJSON('data/site.json');
+    SITE.programs = SITE.programs || [];
+    SITE.schematics = SITE.schematics || [];
+    SITE.pults = SITE.pults || [];
+    refreshUi();
   } catch (e) { log('Не удалось прочитать site.json: ' + e.message); }
 }
 
-/* ——— версия ——— */
-async function uploadVersion() {
+/* ——— 1. версия ПЛК ——— */
+async function uploadPlc() {
   const code = $('#v-code').value.trim().toUpperCase();
-  const version = $('#v-ver').value.trim();
   const pult = $('#v-pult').value.trim();
+  const version = $('#v-ver').value.trim();
   const message = $('#v-msg').value.trim();
-  const plcFile = $('#v-plcfile').files[0];
-  const hmiFile = $('#v-hmifile').files[0];
-  if (!code || !version || !pult || !message || !plcFile || !hmiFile) {
-    return log('Заполните обязательные поля: код, версия, пульт, сообщение, оба файла.');
-  }
-  if (!GH.hasToken()) return log('Сначала сохраните токен вверху страницы.');
+  const file = $('#v-plcfile').files[0];
+  if (!code || !pult || !version || !message || !file)
+    return log('Заполните: код, пульт, версию ПЛК, сообщение и файл.');
+  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
 
   try {
     log('Читаю site.json…');
     const site = await GH.rawJSON('data/site.json');
+    site.programs = site.programs || [];
+    site.pults = site.pults || [];
     let prog = site.programs.find(p => p.code.toUpperCase() === code);
     if (!prog) {
       const name = $('#v-name').value.trim();
@@ -160,106 +216,198 @@ async function uploadVersion() {
                plant_type: $('#v-plant').value.trim(), description: '', deleted: false, versions: [] };
       site.programs.push(prog);
     }
-    const dup = (prog.versions || []).some(v => v.version === version && v.pult.toLowerCase() === pult.toLowerCase());
-    if (dup && !confirm('Версия ' + version + ' для пульта ' + pult + ' уже есть. Добавить ещё одну запись?'))
-      return log('Отменено.');
+    prog.versions = prog.versions || [];
+    if (prog.versions.some(v => v.version === version && (v.pult || '').toLowerCase() === pult.toLowerCase()))
+      return log('Версия ' + version + ' для пульта ' + pult + ' уже есть. Панели добавляйте в разделе 2.');
 
     const dir = `data/files/programs/${code}/${pult}/${version}`;
-    const commits = [];
     log('Готовлю файл ПЛК…');
-    const plcBlob = await GH.fileToBlob(plcFile);
-    commits.push({ path: `${dir}/plc_${plcFile.name}`, ...plcBlob });
-    log('Готовлю файл панели…');
-    const hmiBlob = await GH.fileToBlob(hmiFile);
-    commits.push({ path: `${dir}/hmi_${hmiFile.name}`, ...hmiBlob });
+    const blob = await GH.fileToBlob(file);
+    const plc = { path: `${dir}/plc_${file.name}`, name: file.name, size: file.size };
 
-    const files = {
-      plc: { path: `${dir}/plc_${plcFile.name}`, name: plcFile.name, size: plcFile.size },
-      hmi: { path: `${dir}/hmi_${hmiFile.name}`, name: hmiFile.name, size: hmiFile.size },
-    };
+    prog.versions.push({
+      version, pult, message, author, created_at: nowISO(),
+      plc, panels: [],
+    });
+    if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
+    site.updated = nowISO();
 
-    if ($('#v-kit').checked) {
-      if (!window.JSZip) {
-        log('JSZip не загрузился — комплектный архив не собран (файлы ПЛК и панели загружены).');
-      } else {
-        log('Собираю комплектный архив…');
-        const zip = new JSZip();
-        zip.file(plcFile.name, plcBlob.content, { base64: true });
-        zip.file(hmiFile.name, hmiBlob.content, { base64: true });
-        if ($('#v-schem').checked) {
-          let sch = null;
-          if (prog) {
-            sch = (site.schematics || []).find(s => s.pult.toLowerCase() === pult.toLowerCase() && s.program === code);
-          }
-          if (!sch) {
-            sch = (site.schematics || []).find(s => s.pult.toLowerCase() === pult.toLowerCase() && !s.program);
-          }
-          if (sch) {
-            log('Добавляю в комплект схему: ' + sch.file.name);
-            zip.file(sch.file.name, await rawBinary(sch.file.path));
-          } else {
-            log('Схемы для пульта ' + pult + ' нет — комплект без схемы.');
-          }
-        }
-        const zblob = await GH.fileToBlob(
-          new File([await zip.generateAsync({ type: 'blob' })], 'kit.zip'));
-        const kitName = `${code}_${version}_${pult}.zip`;
-        commits.push({ path: `${dir}/${kitName}`, ...zblob });
-        files.kit = { path: `${dir}/${kitName}`, name: kitName, size: zblob.content.length * 3 / 4 };
+    log('Записываю в GitHub…');
+    const sha = await GH.commitFiles([
+      { path: plc.path, ...blob },
+      { path: 'data/site.json', content: JSON.stringify(site, null, 2) },
+    ], `ПЛК ${code} ${version} (${pult}): ${message}`);
+    log('Готово. Коммит ' + sha.slice(0, 8) + '. Теперь можно добавить панели в разделе 2.');
+    $('#v-msg').value = ''; $('#v-plcfile').value = '';
+    await reload();
+  } catch (e) { log('Ошибка: ' + e.message); }
+}
+
+/* ——— 2. панели ——— */
+function guessVersion(name) {
+  const base = name.replace(/\.[^.]+$/, '');
+  const m = base.match(/(\d+(?:[._-]\d+)*)\s*$/);
+  return m ? m[1].replace(/[_-]/g, '.') : base;
+}
+
+function panelRows() {
+  const files = [...$('#p-files').files];
+  $('#p-list').innerHTML = files.map((f, i) => {
+    const ver = guessVersion(f.name);
+    return `<div class="pick-row">
+      <span class="file-name" title="${esc(f.name)}">${esc(f.name)}</span>
+      <input class="pick-ver" data-i="${i}" value="${esc(ver)}" placeholder="версия панели">
+      <input class="pick-msg" data-i="${i}" placeholder="что изменилось">
+    </div>`;
+  }).join('');
+  if (files.length) log('Выбрано файлов панели: ' + files.length + '. Проверьте версии и нажмите «Загрузить панели».');
+}
+
+async function buildKit(code, pult, plcRec, panelFile, panelVer) {
+  const items = [];
+  items.push({ name: plcRec.plc.name, data: await rawBinary(plcRec.plc.path) });
+  items.push({ name: panelFile.name, data: await panelFile.arrayBuffer() });
+  for (const s of (SITE.schematics || [])) {
+    if ((s.pult || '').toLowerCase() !== pult.toLowerCase()) continue;
+    try { items.push({ name: s.file.name, data: await rawBinary(s.file.path) }); }
+    catch (e) { log('Схема не вошла в комплект: ' + s.file.name); }
+  }
+  const zipBlob = await Zip.build(items);
+  const name = panelVer
+    ? `${code}_${plcRec.version}_${panelVer}_${pult}.zip`
+    : `${code}_${plcRec.version}_${pult}.zip`;
+  const dir = `data/files/programs/${code}/${pult}/${plcRec.version}`;
+  return { path: `${dir}/${name}`, name, size: zipBlob.size, blob: zipBlob };
+}
+
+async function uploadPanels() {
+  const target = $('#p-target').value;
+  if (!target) return log('Выберите версию ПЛК (раздел 2).');
+  const files = [...$('#p-files').files];
+  if (!files.length) return log('Выберите хотя бы один файл панели.');
+  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+
+  try {
+    log('Читаю site.json…');
+    const site = await GH.rawJSON('data/site.json');
+    const [code, idxRaw] = target.split('|');
+    const idx = Number(idxRaw);
+    const prog = (site.programs || []).find(p => p.code === code);
+    if (!prog || !prog.versions || !prog.versions[idx]) return log('Версия ПЛК не найдена — обновите страницу.');
+    const v = normalizeVersion(prog.versions[idx]);
+    if (!v.plc) return log('У выбранной версии нет файла ПЛК.');
+    prog.versions[idx] = v;
+    v.panels = v.panels || [];
+
+    const commits = [];
+    const vers = [...document.querySelectorAll('.pick-ver')];
+    const msgs = [...document.querySelectorAll('.pick-msg')];
+    const hmiType = $('#p-hmitype').value.trim();
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const pv = (vers[i] ? vers[i].value.trim() : '') || file.name.replace(/\.[^.]+$/, '');
+      const pmsg = msgs[i] ? msgs[i].value.trim() : '';
+      if (v.panels.some(p => (p.version || '') === pv))
+        return log('Версия панели ' + pv + ' уже есть у этой ПЛК. Укажите другую версию.');
+      log(`Панель ${i + 1}/${files.length}: ${file.name}…`);
+      const blob = await GH.fileToBlob(file);
+      const dir = `data/files/programs/${code}/${v.pult}/${v.version}`;
+      const rec = {
+        version: pv, hmi_type: hmiType, message: pmsg, author, created_at: nowISO(),
+        file: { path: `${dir}/hmi_${file.name}`, name: file.name, size: file.size },
+        kit: null,
+      };
+      commits.push({ path: rec.file.path, ...blob });
+
+      if ($('#p-kit').checked) {
+        log('Собираю комплект для ' + pv + '…');
+        try {
+          const kit = await buildKit(code, v.pult, v, file, pv);
+          const kblob = await GH.fileToBlob(new File([kit.blob], kit.name));
+          commits.push({ path: kit.path, ...kblob });
+          rec.kit = { path: kit.path, name: kit.name, size: kit.size };
+        } catch (e) { log('Комплект не собран: ' + e.message); }
       }
+      v.panels.push(rec);
     }
 
-    (prog.versions = prog.versions || []).push({
-      version, version_plc: $('#v-plc').value.trim() || version,
-      version_hmi: $('#v-hmi').value.trim(), hmi_type: $('#v-hmitype').value.trim(),
-      pult, message, created_at: nowISO(), files,
-    });
+    site.updated = nowISO();
+    commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
+    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…');
+    const sha = await GH.commitFiles(commits, `панели для ${code} ${v.version}: ${files.length} шт.`);
+    log('Готово. Коммит ' + sha.slice(0, 8) + '. Сайт обновится за 1–10 минут.');
+    $('#p-files').value = ''; $('#p-list').innerHTML = '';
+    await reload();
+  } catch (e) { log('Ошибка: ' + e.message); }
+}
+
+/* ——— 3. схемы ——— */
+function schematicRows() {
+  const files = [...$('#s-files').files];
+  $('#s-list').innerHTML = files.map((f, i) => `
+    <div class="pick-row">
+      <span class="file-name" title="${esc(f.name)}">${esc(f.name)}</span>
+      <input class="pick-desc" data-i="${i}" placeholder="описание (необязательно)">
+    </div>`).join('');
+  if (files.length) log('Выбрано схем: ' + files.length + '. Нажмите «Загрузить схемы».');
+}
+
+async function uploadSchematics() {
+  const pult = $('#s-pult').value.trim();
+  const progCode = $('#s-prog').value.trim().toUpperCase();
+  const files = [...$('#s-files').files];
+  if (!pult || !files.length) return log('Укажите пульт и выберите файлы схем.');
+  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
+
+  try {
+    log('Читаю site.json…');
+    const site = await GH.rawJSON('data/site.json');
+    site.schematics = site.schematics || [];
+    site.pults = site.pults || [];
+    const dir = progCode
+      ? `data/files/schematics/program/${progCode}/${pult}`
+      : `data/files/schematics/common/${pult}`;
+    const descs = [...document.querySelectorAll('.pick-desc')];
+    const commits = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const rec = {
+        pult, program: progCode || null,
+        file: { path: `${dir}/${file.name}`, name: file.name, size: file.size },
+        description: descs[i] ? descs[i].value.trim() : '',
+        updated_at: nowISO(), author,
+      };
+      commits.push({ path: rec.file.path, ...(await GH.fileToBlob(file)) });
+      // одноимённый файл заменяем, остальные схемы пульта сохраняем
+      site.schematics = site.schematics.filter(s =>
+        !((s.pult || '').toLowerCase() === pult.toLowerCase() &&
+          (s.program || null) === rec.program &&
+          s.file.name === file.name));
+      site.schematics.push(rec);
+      log('Схема ' + (i + 1) + '/' + files.length + ': ' + file.name);
+    }
+
+    if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
     site.updated = nowISO();
     commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
 
     log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…');
-    const sha = await GH.commitFiles(commits, `версия ${code} ${version} (${pult}): ${message}`);
-    log('Готово! Коммит ' + sha.slice(0, 8) + '. Сайт на Pages обновится за 1–10 минут.');
+    const sha = await GH.commitFiles(commits,
+      `схемы ${pult}${progCode ? ' (' + progCode + ')' : ''}: ${files.length} шт.`);
+    log('Готово. Коммит ' + sha.slice(0, 8) + '. Сайт обновится за 1–10 минут.');
+    $('#s-files').value = ''; $('#s-list').innerHTML = '';
+    await reload();
   } catch (e) { log('Ошибка: ' + e.message); }
 }
 
-/* ——— схема ——— */
-async function uploadSchematic() {
-  const pult = $('#s-pult').value.trim();
-  const progCode = $('#s-prog').value.trim().toUpperCase();
-  const file = $('#s-file').files[0];
-  if (!pult || !file) return log('Укажите пульт и файл схемы.');
-  if (!GH.hasToken()) return log('Сначала сохраните токен вверху страницы.');
-  try {
-    const site = await GH.rawJSON('data/site.json');
-    const dir = progCode
-      ? `data/files/schematics/program/${progCode}/${pult}`
-      : `data/files/schematics/common/${pult}`;
-    const blob = await GH.fileToBlob(file);
-    const rec = {
-      pult, program: progCode || null,
-      file: { path: `${dir}/${file.name}`, name: file.name, size: file.size },
-      description: $('#s-desc').value.trim(), updated_at: nowISO(),
-    };
-    site.schematics = (site.schematics || []).filter(s =>
-      !(s.pult.toLowerCase() === pult.toLowerCase() && (s.program || null) === rec.program));
-    site.schematics.push(rec);
-    site.updated = nowISO();
-    log('Записываю схему в GitHub…');
-    await GH.commitFiles([
-      { path: rec.file.path, ...blob },
-      { path: 'data/site.json', content: JSON.stringify(site, null, 2) },
-    ], `схема ${pult}${progCode ? ' (' + progCode + ')' : ''}: ${file.name}`);
-    log('Готово! Сайт обновится за 1–10 минут.');
-  } catch (e) { log('Ошибка: ' + e.message); }
-}
-
-/* ——— пользователь ——— */
+/* ——— 4. пользователь ——— */
 async function createUser() {
   const login = $('#u-login').value.trim();
   const pass = $('#u-pass').value;
   if (!login || !pass) return log('Укажите логин и пароль.');
-  if (!GH.hasToken()) return log('Сначала сохраните токен вверху страницы.');
+  if (!GH.hasToken()) return log('Сначала сохраните GitHub-токен.');
   try {
     const data = await GH.rawJSON('data/users.json');
     if (data.users.some(u => u.login.toLowerCase() === login.toLowerCase()))
@@ -284,15 +432,24 @@ $('#eye-token').addEventListener('click', () => {
 });
 $('#b-token').addEventListener('click', () => {
   GH.setToken($('#u-token').value);
-  $('#token-status').textContent = GH.hasToken() ? 'токен сохранён в этом браузере' : 'пусто';
+  $('#token-status').textContent = GH.hasToken() ? 'токен сохранён' : 'пусто';
+  if (GH.hasToken()) $('#token-box').open = false;
 });
-$('#b-upload').addEventListener('click', uploadVersion);
-$('#b-schem').addEventListener('click', uploadSchematic);
+$('#v-plcfile').addEventListener('change', () => {
+  const f = $('#v-plcfile').files[0];
+  if (f) log('Выбран файл ПЛК: ' + f.name);
+});
+$('#p-files').addEventListener('change', panelRows);
+$('#s-files').addEventListener('change', schematicRows);
+$('#b-plc').addEventListener('click', uploadPlc);
+$('#b-panels').addEventListener('click', uploadPanels);
+$('#b-schem').addEventListener('click', uploadSchematics);
 $('#b-user').addEventListener('click', createUser);
 
 $('#u-token').value = GH.token();
-$('#token-status').textContent = GH.hasToken() ? 'токен сохранён в этом браузере' : 'токен не задан';
-refreshLists();
+$('#token-status').textContent = GH.hasToken() ? 'токен сохранён' : 'токен не задан';
+if (!GH.hasToken()) $('#token-box').open = true;
+reload();
 </script>
 </body>
 </html>

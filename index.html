@@ -6,61 +6,10 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
-<!-- ЭКРАН ВХОДА -->
-<div id="screen-login" class="screen">
-  <div class="login-card">
-    <div class="login-head">
-      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
-        <defs>
-          <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#1d4ed8"/>
-          </linearGradient>
-        </defs>
-        <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#lgA)"/>
-        <path d="M13 29V11h8.2c3.6 0 6 2.2 6 5.4 0 2.6-1.6 4.5-4.2 5.2L28 29h-4.3l-4.4-6.8H17V29h-4Zm4-10h3.6c1.6 0 2.6-.9 2.6-2.3 0-1.5-1-2.3-2.6-2.3H17V19Z" fill="#fff"/>
-      </svg>
-      <div>
-        <h1>RifeyGit</h1>
-        <p class="sub">Программы ПЛК и схемы пультов</p>
-      </div>
-    </div>
-    <form id="login-form" autocomplete="on" novalidate>
-      <label>Логин
-        <input id="login-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false">
-      </label>
-      <label>Пароль
-        <span class="pw-wrap">
-          <input id="login-pass" type="password" name="password" autocomplete="current-password" autocapitalize="none" spellcheck="false">
-          <button type="button" class="eye" data-eye="login-pass" title="Показать пароль">&#128065;</button>
-        </span>
-      </label>
-      <button type="submit" class="primary wide" id="btn-login">
-        <span id="btn-login-text">Войти</span>
-      </button>
-      <p id="login-error" class="error" hidden></p>
-      <p id="boot-error" class="error" hidden>Не загрузилось приложение.
-        <a href="./?fresh=1">Обновите страницу</a> или откройте ссылку заново.</p>
-    </form>
-
-    <details id="login-help">
-      <summary>Не получается войти?</summary>
-      <p class="hint">Проверьте раскладку клавиатуры (логин и пароль — латиницей),
-         Caps Lock и лишние пробелы. Если ссылка открыта из WhatsApp или Telegram,
-         откройте её в Chrome или Safari.</p>
-      <div class="row">
-        <button type="button" id="btn-diag" class="ghost">Проверить соединение</button>
-        <a class="btn ghost" id="link-reload" href="./?fresh=1">Открыть заново</a>
-      </div>
-      <pre id="diag-out" class="diag" hidden></pre>
-    </details>
-  </div>
-</div>
-
-<!-- ОСНОВНОЙ ЭКРАН -->
 <div id="screen-app" class="screen" hidden>
   <header class="topbar">
     <span class="brand">
@@ -98,7 +47,7 @@
            Заполнение подставляет данные из реестра.</p>
         <form id="dl-form" class="grid2">
           <label>Заводской № объекта
-            <input id="dl-factory" list="eq-list" placeholder="напр. БЗ-045">
+            <input id="dl-factory" list="eq-list" placeholder="напр. БЗ-045" autocapitalize="none">
           </label>
           <label>Наименование объекта
             <input id="dl-eqname">
@@ -110,7 +59,7 @@
             <input id="dl-customer">
           </label>
           <label>Назначение *
-            <select id="dl-purpose" required>
+            <select id="dl-purpose">
               <option value="">— выберите —</option>
               <option>ввод в эксплуатацию</option>
               <option>ремонт</option>
@@ -202,7 +151,7 @@
     <section id="tabpanel-upload" class="panel" hidden>
       <div class="card">
         <h2>Загрузка новых версий и схем</h2>
-        <p class="hint">Загрузка версий, схем и создание пользователей выполняется на отдельной
+        <p class="hint">Версии ПЛК, панели, схемы и пользователи загружаются на отдельной
            странице-утилите (нужен ваш GitHub-токен с правом записи в этот репозиторий).</p>
         <div class="row">
           <a class="primary btn" href="tools/upload.html">Открыть страницу загрузки</a>
@@ -229,16 +178,9 @@
   </div>
 </dialog>
 
-<script src="gh.js?v=5"></script>
-<script src="app.js?v=5"></script>
-<script>
-  // если скрипт не выполнился (старый браузер, блокировка, обрыв сети) — сказать об этом
-  setTimeout(function () {
-    if (!window.RIFEY_BOOTED) {
-      var e = document.getElementById('boot-error');
-      if (e) e.hidden = false;
-    }
-  }, 2500);
-</script>
+<datalist id="pult-list"></datalist>
+
+<script src="gh.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

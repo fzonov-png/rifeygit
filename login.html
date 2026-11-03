@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#2563eb">
+<title>Вход — RifeyGit</title>
+<link rel="stylesheet" href="style.css?v=6">
+</head>
+<body class="auth-body">
+
+<main class="auth">
+  <section class="auth-brand">
+    <div class="auth-brand-top">
+      <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+          <linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#1d4ed8"/>
+          </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#lgA)"/>
+        <path d="M13 29V11h8.2c3.6 0 6 2.2 6 5.4 0 2.6-1.6 4.5-4.2 5.2L28 29h-4.3l-4.4-6.8H17V29h-4Zm4-10h3.6c1.6 0 2.6-.9 2.6-2.3 0-1.5-1-2.3-2.6-2.3H17V19Z" fill="#fff"/>
+      </svg>
+      <span>RifeyGit</span>
+    </div>
+    <h1>Программы ПЛК<br>и схемы пультов</h1>
+    <p class="auth-lead">Единое хранилище версий для бетонных заводов:
+      программы ПЛК, панели оператора и электрические схемы — в одном месте.</p>
+    <ul class="auth-points">
+      <li>Все версии и комплектные архивы</li>
+      <li>Скачивание с телефона в любой сети</li>
+      <li>Реестр оборудования и история изменений</li>
+    </ul>
+    <p class="auth-foot">Без установки приложений · работает круглосуточно</p>
+  </section>
+
+  <section class="auth-form">
+    <h2>Вход</h2>
+    <p class="sub">Используйте логин и пароль, выданные администратором</p>
+
+    <form id="login-form" autocomplete="on" novalidate>
+      <label>Логин
+        <input id="login-user" name="username" autocomplete="username"
+               autocapitalize="none" spellcheck="false" placeholder="например, Zonov">
+      </label>
+      <label>Пароль
+        <span class="pw-wrap">
+          <input id="login-pass" type="password" name="password" autocomplete="current-password"
+                 autocapitalize="none" spellcheck="false" placeholder="••••••••">
+          <button type="button" class="eye" data-eye="login-pass" title="Показать пароль">&#128065;</button>
+        </span>
+      </label>
+      <button type="submit" class="primary wide" id="btn-login">
+        <span id="btn-login-text">Войти</span>
+      </button>
+      <p id="login-error" class="error" hidden></p>
+      <p id="boot-error" class="error" hidden>Не загрузилось приложение.
+        <a href="./login.html?fresh=1">Обновите страницу</a>.</p>
+    </form>
+
+    <details id="login-help">
+      <summary>Не получается войти?</summary>
+      <p class="hint">Проверьте раскладку клавиатуры (логин и пароль — латиницей),
+         Caps Lock и лишние пробелы. Если ссылка открыта из WhatsApp или Telegram,
+         откройте её в Chrome или Safari.</p>
+      <div class="row">
+        <button type="button" id="btn-diag" class="ghost">Проверить соединение</button>
+        <a class="btn ghost" id="link-reload" href="./login.html?fresh=1">Открыть заново</a>
+      </div>
+      <pre id="diag-out" class="diag" hidden></pre>
+    </details>
+
+    <p class="auth-note">Доступ выдаёт инженер-программист или администратор.</p>
+  </section>
+</main>
+
+<script src="gh.js?v=6"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const APP_VERSION = '6';
+
+async function sha256hex(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* уже вошли — сразу на главную */
+try {
+  const s = JSON.parse(localStorage.getItem('rifeygit_user') || 'null');
+  if (s && s.login) location.replace('index.html');
+} catch { /* нет сессии */ }
+
+async function doLogin(ev) {
+  ev.preventDefault();
+  const err = $('#login-error');
+  const btn = $('#btn-login');
+  const btnText = $('#btn-login-text');
+  err.hidden = true;
+  const login = $('#login-user').value.trim();
+  const pass = $('#login-pass').value.trim();
+  if (!login) { err.textContent = 'Введите логин'; err.hidden = false; $('#login-user').focus(); return; }
+  if (!pass) { err.textContent = 'Введите пароль'; err.hidden = false; $('#login-pass').focus(); return; }
+  btn.disabled = true;
+  if (btnText) btnText.textContent = 'Проверяю…';
+  try {
+    const data = await (await fetch('data/users.json', { cache: 'no-store' })).json();
+    const u = data.users.find(x => x.login.toLowerCase() === login.toLowerCase() && x.active !== false);
+    if (u) {
+      const hash = await sha256hex(u.salt + '\0' + u.login.toLowerCase() + '\0' + pass);
+      if (hash === u.hash) {
+        const user = { login: u.login, role: u.role, full_name: u.full_name || u.login };
+        try { localStorage.setItem('rifeygit_user', JSON.stringify(user)); }
+        catch { /* приватный режим */ }
+        location.replace('index.html');
+        return;
+      }
+    }
+    err.textContent = 'Неверный логин или пароль. Проверьте раскладку клавиатуры и Caps Lock.';
+    err.hidden = false;
+  } catch (e) {
+    err.textContent = 'Не удалось проверить вход: ' + e.message;
+    err.hidden = false;
+  } finally {
+    btn.disabled = false;
+    if (btnText) btnText.textContent = 'Войти';
+  }
+}
+
+async function runDiag() {
+  const out = $('#diag-out');
+  out.hidden = false;
+  out.textContent = 'Проверяю…';
+  const lines = [
+    'Версия сайта: ' + APP_VERSION,
+    'Браузер: ' + navigator.userAgent,
+    'Скрипты: работают',
+    'crypto.subtle: ' + (window.crypto && crypto.subtle ? 'да' : 'НЕТ'),
+  ];
+  try {
+    localStorage.setItem('__rifey_test', '1');
+    localStorage.removeItem('__rifey_test');
+    lines.push('localStorage: да');
+  } catch (e) { lines.push('localStorage: НЕТ (' + e.message + ')'); }
+  const t0 = Date.now();
+  try {
+    const r = await fetch('data/users.json?d=' + Date.now(), { cache: 'no-store' });
+    const j = await r.json();
+    lines.push('Данные учёток: HTTP ' + r.status + ', записей: ' + (j.users || []).length +
+      ', ' + (Date.now() - t0) + ' мс');
+  } catch (e) {
+    lines.push('Данные учёток: ОШИБКА ' + e.message);
+  }
+  out.textContent = lines.join('\n');
+}
+
+window.RIFEY_BOOTED = true;
+document.querySelectorAll('[data-eye]').forEach(b => b.addEventListener('click', () => {
+  const inp = document.getElementById(b.dataset.eye);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}));
+document.querySelector('#login-form').addEventListener('submit', doLogin);
+document.querySelector('#btn-diag').addEventListener('click', runDiag);
+document.querySelector('#link-reload').href = './login.html?fresh=' + Date.now();
+setTimeout(function () {
+  if (!window.RIFEY_BOOTED) {
+    var e = document.getElementById('boot-error');
+    if (e) e.hidden = false;
+  }
+}, 2500);
+</script>
+</body>
+</html>
