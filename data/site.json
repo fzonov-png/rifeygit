@@ -1,35 +1,10 @@
 {
-  "updated": "2026-11-03T13:58:47",
+  "updated": null,
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М",
-    "ПУ-ТЕСТ"
+    "ПУ-Б2-М"
   ],
-  "programs": [
-    {
-      "code": "TSTDEMO",
-      "name": "Тестовая программа",
-      "target": "",
-      "plant_type": "ТЕСТ",
-      "description": "",
-      "deleted": false,
-      "versions": [
-        {
-          "version": "9.9",
-          "pult": "ПУ-ТЕСТ",
-          "message": "проверка загрузки",
-          "author": "Инженер-программист",
-          "created_at": "2026-11-03T13:58:47",
-          "plc": {
-            "path": "data/files/programs/TSTDEMO/ПУ-ТЕСТ/9.9/plc_test_plc.ap15",
-            "name": "test_plc.ap15",
-            "size": 14
-          },
-          "panels": []
-        }
-      ]
-    }
-  ],
+  "programs": [],
   "schematics": [],
   "equipment": []
 }

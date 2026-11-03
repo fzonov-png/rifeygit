@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>Вход — RifeyGit</title>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body class="auth-body">
 
@@ -75,11 +75,11 @@
   </section>
 </main>
 
-<script src="gh.js?v=6"></script>
+<script src="gh.js?v=7"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
-const APP_VERSION = '6';
+const APP_VERSION = '7';
 
 async function sha256hex(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
