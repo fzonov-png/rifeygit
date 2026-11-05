@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=14">
+<link rel="stylesheet" href="../style.css?v=15">
 </head>
 <body>
 <div class="screen">
@@ -23,6 +23,17 @@
       RifeyGit
     </a>
     <a class="btn ghost" href="../index.html">&larr; На главную</a>
+  </div>
+
+  <div class="card" id="denied-card" hidden>
+    <h2>Загрузка недоступна</h2>
+    <p>Вы вошли как <b id="denied-who"></b>. Загружать версии могут только
+       <b>администратор</b> и <b>инженер-программист</b>; у наладчиков доступ только
+       к скачиванию.</p>
+    <div class="row">
+      <a class="primary btn" href="../login.html" id="denied-relogin">Войти под другой учётной записью</a>
+      <a class="btn ghost" href="../index.html">На главную</a>
+    </div>
   </div>
 
   <div class="status-card" id="status-card">
@@ -135,8 +146,8 @@
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=14"></script>
-<script src="../zip.js?v=14"></script>
+<script src="../gh.js?v=15"></script>
+<script src="../zip.js?v=15"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -153,8 +164,12 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g,
 let SITE = null;
 let USER = null;
 try { USER = JSON.parse(localStorage.getItem('rifeygit_user') || 'null'); } catch { USER = null; }
-if (!USER) location.replace('../login.html');
-else if (USER.role === 'naladchik') location.replace('../index.html');
+
+/* Наладчику загрузка недоступна — не «молчаливый» переход, а явное объяснение. */
+let DENIED = false;
+if (!USER) { DENIED = true; location.replace('../login.html'); }
+else if (USER.role !== 'admin' && USER.role !== 'engineer') { DENIED = true; }
+
 const author = USER ? (USER.full_name || USER.login) : '';
 
 /* Токен: пока его нет — сверху висит предупреждение, действия не «молчат». */
@@ -596,6 +611,15 @@ async function createUser() {
 }
 
 /* ——— кнопки ——— */
+if (DENIED) {
+  document.querySelectorAll('.screen > .card, .screen > .status-card')
+    .forEach(el => { el.hidden = true; });
+  $('#denied-card').hidden = false;
+  $('#denied-who').textContent = USER
+    ? (USER.full_name ? USER.full_name + ' (' + USER.login + ')' : USER.login)
+    : '';
+  document.title = 'Загрузка недоступна — RifeyGit';
+} else {
 $('#eye-token').addEventListener('click', () => {
   const i = $('#u-token'); i.type = i.type === 'password' ? 'text' : 'password';
 });
@@ -627,6 +651,7 @@ $('#u-token').value = GH.token();
 tokenUI();
 if (!GH.hasToken()) $('#token-box').open = true;
 reload();
+}
 </script>
 </body>
 </html>

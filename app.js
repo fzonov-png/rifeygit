@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '14';
+const APP_VERSION = '15';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -96,6 +96,14 @@ function showTab(name) {
 
 /* Состояние токена в этом браузере — видно без перехода на страницу загрузки. */
 function renderUploadTab() {
+  const denied = !isEngineer();
+  $('#upload-denied').hidden = !denied;
+  $('#upload-main').hidden = denied;
+  if (denied) {
+    $('#upload-denied-who').textContent =
+      USER.full_name ? USER.full_name + ' (' + USER.login + ')' : USER.login;
+    return;
+  }
   const el = $('#upload-token-state');
   if (!el) return;
   const has = GH.hasToken();
@@ -459,7 +467,7 @@ async function enterApp() {
   $('#who-name').textContent = USER.full_name + ' (' + USER.login + ')';
   $('#avatar').textContent = (USER.full_name || USER.login).trim().charAt(0).toUpperCase();
   $('#tab-users').hidden = !isEngineer();
-  $('#tab-upload').hidden = !isEngineer();
+  $('#tab-upload').hidden = false;
   $('#btn-report').hidden = false;
   try {
     await loadSite();
@@ -501,6 +509,8 @@ function boot() {
   $('#rp-wa').addEventListener('click', () => {
     window.open('https://wa.me/?text=' + encodeURIComponent(reportText()), '_blank');
   });
+
+  $('#upload-relogin').addEventListener('click', logout);
 
   $('#btn-refresh').addEventListener('click', async () => {
     const btn = $('#btn-refresh');

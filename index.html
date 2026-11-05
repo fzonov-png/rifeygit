@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 
@@ -149,7 +149,18 @@
 
     <!-- ВКЛАДКА «ЗАГРУЗКА ВЕРСИЙ» -->
     <section id="tabpanel-upload" class="panel" hidden>
-      <div class="card">
+      <div id="upload-denied" class="card" hidden>
+        <h2>Загрузка недоступна для вашей учётной записи</h2>
+        <p>Вы вошли как <b id="upload-denied-who"></b>. Загружать версии могут только
+           <b>администратор</b> и <b>инженер-программист</b> — у наладчиков доступ только
+           к скачиванию.</p>
+        <p class="hint">Выйдите и войдите под учётной записью с нужной ролью
+           (например, <code>admin</code> или <code>engineer</code>).</p>
+        <div class="row">
+          <button id="upload-relogin" class="primary">Войти под другой учётной записью</button>
+        </div>
+      </div>
+      <div id="upload-main" class="card">
         <h2>Загрузка новых версий и схем</h2>
         <ol class="steps hint">
           <li>Откройте страницу загрузки кнопкой ниже.</li>
@@ -192,7 +203,7 @@
 
 <datalist id="pult-list"></datalist>
 
-<script src="gh.js?v=14"></script>
-<script src="app.js?v=14"></script>
+<script src="gh.js?v=15"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
