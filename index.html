@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -151,12 +151,20 @@
     <section id="tabpanel-upload" class="panel" hidden>
       <div class="card">
         <h2>Загрузка новых версий и схем</h2>
-        <p class="hint">Версии ПЛК, панели, схемы и пользователи загружаются на отдельной
-           странице-утилите (нужен ваш GitHub-токен с правом записи в этот репозиторий).</p>
+        <ol class="steps hint">
+          <li>Откройте страницу загрузки кнопкой ниже.</li>
+          <li>Вставьте GitHub-токен (fine-grained, право <b>Contents: Read and write</b>)
+              и нажмите «Сохранить токен».</li>
+          <li>Заполните поля, выберите файл и нажмите кнопку загрузки —
+              результат появится в полосе сверху.</li>
+        </ol>
+        <p id="upload-token-state" class="hint"></p>
         <div class="row">
           <a class="primary btn" href="tools/upload.html">Открыть страницу загрузки</a>
         </div>
-        <p class="hint">После загрузки сайт на GitHub Pages обновляется сам за 1–10 минут.</p>
+        <p class="hint">Новая версия появляется на сайте сразу после коммита;
+           если файл ещё не опубликован на Pages, скачивание автоматически идёт
+           из репозитория.</p>
       </div>
     </section>
   </main>
@@ -184,7 +192,7 @@
 
 <datalist id="pult-list"></datalist>
 
-<script src="gh.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="gh.js?v=14"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

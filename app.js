@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '13';
+const APP_VERSION = '14';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -91,6 +91,18 @@ function showTab(name) {
   if (name === 'programs') renderProgramsTab();
   if (name === 'equipment') renderEquipment();
   if (name === 'users') renderUsers();
+  if (name === 'upload') renderUploadTab();
+}
+
+/* Состояние токена в этом браузере — видно без перехода на страницу загрузки. */
+function renderUploadTab() {
+  const el = $('#upload-token-state');
+  if (!el) return;
+  const has = GH.hasToken();
+  el.textContent = has
+    ? 'Токен в этом браузере сохранён — можно загружать версии.'
+    : 'Токен в этом браузере не задан. Откройте страницу загрузки и вставьте токен: без него загрузка не работает.';
+  el.className = has ? 'ok' : 'hint';
 }
 
 /* ---------- журнал локальных скачиваний + отчёт ---------- */
