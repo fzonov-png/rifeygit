@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-05T14:18:47",
+  "updated": "2026-11-05T14:19:45",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -40,7 +40,7 @@
               "kit": {
                 "path": "data/files/programs/ПУ-Б2 ПЧ/ПУ-Б2-ПЧ/1/ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8106iP (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
                 "name": "ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8106iP (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
-                "size": 3703934
+                "size": 4174609
               }
             },
             {
@@ -57,7 +57,7 @@
               "kit": {
                 "path": "data/files/programs/ПУ-Б2 ПЧ/ПУ-Б2-ПЧ/1/ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8090XE (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
                 "name": "ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8090XE (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
-                "size": 3649342
+                "size": 4120017
               }
             }
           ]
@@ -65,6 +65,31 @@
       ]
     }
   ],
-  "schematics": [],
+  "schematics": [
+    {
+      "pult": "ПУ-Б2-ПЧ",
+      "program": null,
+      "file": {
+        "path": "data/files/schematics/common/ПУ-Б2-ПЧ/Панель силовая Буран-2.pdf",
+        "name": "Панель силовая Буран-2.pdf",
+        "size": 170476
+      },
+      "description": "",
+      "updated_at": "2026-11-05T14:19:45",
+      "author": "Инженер-программист"
+    },
+    {
+      "pult": "ПУ-Б2-ПЧ",
+      "program": null,
+      "file": {
+        "path": "data/files/schematics/common/ПУ-Б2-ПЧ/Схема Буран-2.pdf",
+        "name": "Схема Буран-2.pdf",
+        "size": 299905
+      },
+      "description": "",
+      "updated_at": "2026-11-05T14:19:45",
+      "author": "Инженер-программист"
+    }
+  ],
   "equipment": []
 }
