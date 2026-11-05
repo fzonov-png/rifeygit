@@ -1,10 +1,35 @@
 {
-  "updated": null,
+  "updated": "2026-11-05T14:16:36",
   "pults": [
     "ПУ-БЗ",
-    "ПУ-Б2-М"
+    "ПУ-Б2-М",
+    "ПУ-Б2-ПЧ"
   ],
-  "programs": [],
+  "programs": [
+    {
+      "code": "ПУ-Б2 ПЧ",
+      "name": "ПУ-Б2 ПЧ",
+      "target": "",
+      "plant_type": "Вибропресс",
+      "description": "",
+      "deleted": false,
+      "versions": [
+        {
+          "version": "1",
+          "pult": "ПУ-Б2-ПЧ",
+          "message": "без описания",
+          "author": "Инженер-программист",
+          "created_at": "2026-11-05T14:16:36",
+          "plc": {
+            "path": "data/files/programs/ПУ-Б2 ПЧ/ПУ-Б2-ПЧ/1/plc_PU-B2-DELTA с вибрацией при ПП и ПЧ.isp",
+            "name": "PU-B2-DELTA с вибрацией при ПП и ПЧ.isp",
+            "size": 44524
+          },
+          "panels": []
+        }
+      ]
+    }
+  ],
   "schematics": [],
   "equipment": []
 }
