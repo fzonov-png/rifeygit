@@ -399,3 +399,7 @@ dialog h3 { margin-top: 0; }
 .foot-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .foot-actions .hint { font-size: 12px; }
 
+
+.steps { margin: 6px 0 2px; padding-left: 20px; }
+.steps li { margin: 3px 0; }
+

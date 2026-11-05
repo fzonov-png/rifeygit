@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=12">
+<link rel="stylesheet" href="../style.css?v=13">
 </head>
 <body>
 <div class="screen">
@@ -40,6 +40,11 @@
     <h2>Загрузка версий и схем</h2>
     <p class="hint">Одна версия программы ПЛК может иметь несколько версий программы панели.
        К одному пульту можно прикрепить несколько схем.</p>
+    <ol class="hint steps">
+      <li>Вставьте GitHub-токен в блоке ниже — без него загрузка не работает.</li>
+      <li>Заполните поля, выберите файл и нажмите кнопку в нужном разделе.</li>
+      <li>Результат (успех или причина ошибки) всегда появляется в полосе сверху.</li>
+    </ol>
     <details id="token-box">
       <summary>GitHub-токен</summary>
       <p class="hint">Fine-grained токен с правом <b>Contents — Read and write</b> на этот
@@ -52,6 +57,7 @@
       </label>
       <div class="row">
         <button id="b-token" class="primary">Сохранить токен</button>
+        <button id="b-token-check" class="ghost">Проверить токен</button>
         <span id="token-status" class="hint"></span>
       </div>
     </details>
@@ -129,8 +135,8 @@
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=12"></script>
-<script src="../zip.js?v=12"></script>
+<script src="../gh.js?v=13"></script>
+<script src="../zip.js?v=13"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -159,8 +165,28 @@ function tokenUI() {
   if (!has) $('#token-box').open = true;
 }
 
-function needToken() {
-  if (GH.hasToken()) return true;
+/* Проверка токена: реально спрашиваем GitHub о правах на репозиторий. */
+async function checkToken() {
+  if (!GH.hasToken()) {
+    $('#token-box').open = true;
+    return log('Токен не задан — вставьте его и нажмите «Сохранить токен».', 'err');
+  }
+  log('Проверяю токен…', 'busy');
+  try {
+    const r = await GH.api('GET', '/repos/' + GH_REPO);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + await GH.errBody(r));
+    const j = await r.json();
+    const canWrite = !!(j.permissions && j.permissions.push);
+    log(canWrite
+      ? 'Токен рабочий: репозиторий ' + GH_REPO + ', право записи есть. Можно загружать.'
+      : 'Токен прочитан, но права записи нет. Нужен fine-grained токен с «Contents: Read and write».',
+      canWrite ? 'ok' : 'err');
+  } catch (e) {
+    log('Токен не работает: ' + e.message, 'err');
+  }
+}
+
+function needToken() {  if (GH.hasToken()) return true;
   log('Сначала укажите GitHub-токен: раскройте блок «GitHub-токен» и нажмите «Сохранить токен».', 'err');
   $('#token-box').open = true;
   $('#token-box').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -181,6 +207,17 @@ function humanSize(n) {
   return n > 1048576 ? (n / 1048576).toFixed(1) + ' МБ'
     : n > 1024 ? Math.round(n / 1024) + ' КБ' : n + ' Б';
 }
+
+/* Пока идёт запись — обновляем статус секундами, чтобы не казалось, что «зависло». */
+function progress(prefix) {
+  const t0 = Date.now();
+  const timer = setInterval(() => {
+    log(prefix + ' ' + Math.round((Date.now() - t0) / 1000) + ' с…', 'busy');
+  }, 1000);
+  return () => clearInterval(timer);
+}
+
+const nextPaint = () => new Promise(r => setTimeout(r, 60));
 
 async function sha256hex(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -268,6 +305,7 @@ async function uploadPlc() {
 
     const dir = `data/files/programs/${code}/${pult}/${version}`;
     log('Готовлю файл ПЛК (' + humanSize(file.size) + ')…', 'busy');
+    await nextPaint();
     const blob = await GH.fileToBlob(file);
     const plc = { path: `${dir}/plc_${file.name}`, name: file.name, size: file.size };
 
@@ -278,11 +316,14 @@ async function uploadPlc() {
     if (!site.pults.some(p => p.toLowerCase() === pult.toLowerCase())) site.pults.push(pult);
     site.updated = nowISO();
 
-    log('Записываю в GitHub — файл ' + humanSize(file.size) + '…', 'busy');
-    const sha = await GH.commitFiles([
-      { path: plc.path, ...blob },
-      { path: 'data/site.json', content: JSON.stringify(site, null, 2) },
-    ], `ПЛК ${code} ${version} (${pult}): ${message || 'без описания'}`);
+    const stop = progress('Записываю в GitHub (' + humanSize(file.size) + '):');
+    let sha;
+    try {
+      sha = await GH.commitFiles([
+        { path: plc.path, ...blob },
+        { path: 'data/site.json', content: JSON.stringify(site, null, 2) },
+      ], `ПЛК ${code} ${version} (${pult}): ${message || 'без описания'}`);
+    } finally { stop(); }
     log('Готово: версия ПЛК ' + version + ' загружена (коммит ' + sha.slice(0, 8) +
       '). Теперь добавьте панели в разделе 2.', 'ok');
     $('#v-msg').value = ''; $('#v-plcfile').value = '';
@@ -361,6 +402,7 @@ async function uploadPanels() {
       if (v.panels.some(p => (p.version || '') === pv))
         return log('Версия панели ' + pv + ' уже есть у этой ПЛК. Укажите другую версию.', 'err');
       log(`Панель ${i + 1}/${files.length}: ${file.name} (${humanSize(file.size)})…`, 'busy');
+      await nextPaint();
       const blob = await GH.fileToBlob(file);
       const dir = `data/files/programs/${code}/${v.pult}/${v.version}`;
       const rec = {
@@ -384,8 +426,11 @@ async function uploadPanels() {
 
     site.updated = nowISO();
     commits.push({ path: 'data/site.json', content: JSON.stringify(site, null, 2) });
-    log('Записываю в GitHub (' + commits.length + ' файлов, один коммит)…', 'busy');
-    const sha = await GH.commitFiles(commits, `панели для ${code} ${v.version}: ${files.length} шт.`);
+    const stop = progress('Записываю в GitHub (' + commits.length + ' файлов):');
+    let sha;
+    try {
+      sha = await GH.commitFiles(commits, `панели для ${code} ${v.version}: ${files.length} шт.`);
+    } finally { stop(); }
     log('Готово: панелей ' + files.length + ' (коммит ' + sha.slice(0, 8) + '). Сайт обновится за 1–10 минут.', 'ok');
     $('#p-files').value = ''; $('#p-list').innerHTML = '';
     await reload();
@@ -565,6 +610,7 @@ $('#b-token').addEventListener('click', () => {
   if (GH.hasToken()) { $('#token-box').open = false; log('Токен сохранён. Можно загружать версии.', 'ok'); reload(); }
   else log('Токен пустой — вставьте его целиком.', 'err');
 });
+$('#b-token-check').addEventListener('click', () => busy('b-token-check', 'Проверяю…', checkToken));
 $('#v-plcfile').addEventListener('change', () => {
   const f = $('#v-plcfile').files[0];
   if (f) log('Выбран файл ПЛК: ' + f.name + ' (' + humanSize(f.size) + '). Нажмите «Загрузить версию ПЛК».');
