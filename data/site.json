@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-05T14:16:36",
+  "updated": "2026-11-05T14:18:06",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -25,7 +25,25 @@
             "name": "PU-B2-DELTA с вибрацией при ПП и ПЧ.isp",
             "size": 44524
           },
-          "panels": []
+          "panels": [
+            {
+              "version": "ПУ-Б2 DELTA 8106iP (2026_ПЧ)",
+              "hmi_type": "8106 iP",
+              "message": "",
+              "author": "Инженер-программист",
+              "created_at": "2026-11-05T14:18:05",
+              "file": {
+                "path": "data/files/programs/ПУ-Б2 ПЧ/ПУ-Б2-ПЧ/1/hmi_ПУ-Б2 DELTA 8106iP (2026_ПЧ).emtp",
+                "name": "ПУ-Б2 DELTA 8106iP (2026_ПЧ).emtp",
+                "size": 3659046
+              },
+              "kit": {
+                "path": "data/files/programs/ПУ-Б2 ПЧ/ПУ-Б2-ПЧ/1/ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8106iP (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
+                "name": "ПУ-Б2 ПЧ_1_ПУ-Б2 DELTA 8106iP (2026_ПЧ)_ПУ-Б2-ПЧ.zip",
+                "size": 3703934
+              }
+            }
+          ]
         }
       ]
     }
