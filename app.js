@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '15';
+const APP_VERSION = '16';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -89,6 +89,7 @@ function showTab(name) {
   if (panel) panel.hidden = false;
   if (name === 'download') renderDownload();
   if (name === 'programs') renderProgramsTab();
+  if (name === 'schematics') renderSchematics();
   if (name === 'equipment') renderEquipment();
   if (name === 'users') renderUsers();
   if (name === 'upload') renderUploadTab();
@@ -281,7 +282,7 @@ function renderDownload() {
   });
 }
 
-/* ---------- отрисовка: программы и схемы ---------- */
+/* ---------- отрисовка: программы (отдельно от схем) ---------- */
 function renderProgramsTab() {
   const locked = USER.role === 'naladchik' && !guardOK();
   $('#pg-lock').hidden = !locked;
@@ -291,31 +292,82 @@ function renderProgramsTab() {
     b.disabled = locked;
     b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
   });
+}
 
-  const schems = SITE.schematics || [];
+/* ---------- отрисовка: схемы (отдельно от программ) ---------- */
+function renderSchematics() {
+  const locked = USER.role === 'naladchik' && !guardOK();
+  $('#pg-lock-schem').hidden = !locked;
+  const schems = (SITE.schematics || []).filter(s => s && s.file && s.file.path);
   if (!schems.length) {
-    $('#pg-schematics').innerHTML = '<p class="hint">Схемы пока не загружены.</p>';
-  } else {
-    const byPult = {};
-    for (const s of schems) (byPult[s.pult] = byPult[s.pult] || []).push(s);
-    $('#pg-schematics').innerHTML = Object.keys(byPult).sort().map(pult => `
-      <div class="pg">
-        <div class="pg-head">
-          <span class="pg-code">${esc(pult)}</span>
-          <span class="pg-meta">схем: ${byPult[pult].length}</span>
-        </div>
-        ${byPult[pult].map(s => `
-          <div class="file-row">
-            <span class="file-kind${s.program ? ' prog' : ''}">${s.program ? 'программа ' + esc(s.program) : 'общая'}</span>
-            <span class="file-name" title="${esc(s.file.name)}">${esc(s.file.name)}</span>
-            ${s.description ? `<span class="file-desc">${esc(s.description)}</span>` : ''}
-            <button class="dl-btn" data-dl="${esc(s.file.path)}" data-label="схема ${esc(pult)}${s.program ? ' (' + esc(s.program) + ')' : ''}">Скачать</button>
-          </div>`).join('')}
-      </div>`).join('');
-    document.querySelectorAll('#pg-schematics .dl-btn').forEach(b => {
-      b.disabled = locked;
-      b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
-    });
+    $('#pg-schematics').innerHTML = `<div class="empty">
+      <div class="empty-title">Схем пока нет</div>
+      <p class="hint">Электрические схемы загружаются отдельно от программ — по пультам.
+        ${isEngineer() ? '<a class="btn ghost" href="tools/upload.html#schem">Загрузить схемы</a>' : ''}</p>
+    </div>`;
+    return;
+  }
+  const byPult = {};
+  for (const s of schems) (byPult[s.pult || '—'] = byPult[s.pult || '—'] || []).push(s);
+  $('#pg-schematics').innerHTML = Object.keys(byPult).sort().map(pult => `
+    <div class="pg">
+      <div class="pg-head">
+        <span class="pg-code">${esc(pult)}</span>
+        <span class="pg-meta">схем: ${byPult[pult].length}</span>
+        <button class="dl-btn kit" data-zip="${esc(pult)}"
+                title="Скачать все схемы этого пульта одним архивом">Все схемы (zip)</button>
+      </div>
+      ${byPult[pult].map(s => `
+        <div class="file-row">
+          <span class="file-kind${s.program ? ' prog' : ''}">${s.program ? 'программа ' + esc(s.program) : 'общая'}</span>
+          <span class="file-name" title="${esc(s.file.name)}">${esc(s.file.name)}</span>
+          ${s.description ? `<span class="file-desc">${esc(s.description)}</span>` : ''}
+          <button class="dl-btn" data-dl="${esc(s.file.path)}"
+                  data-label="схема ${esc(pult)}${s.program ? ' (' + esc(s.program) + ')' : ''}">Скачать</button>
+        </div>`).join('')}
+    </div>`).join('');
+  $('#pg-schematics').querySelectorAll('.dl-btn[data-dl]').forEach(b => {
+    b.disabled = locked;
+    b.addEventListener('click', () => downloadFile(b.dataset.dl, b.dataset.label));
+  });
+  $('#pg-schematics').querySelectorAll('[data-zip]').forEach(b => {
+    b.disabled = locked;
+    b.addEventListener('click', () => downloadSchematicsZip(b.dataset.zip));
+  });
+}
+
+/* Все схемы одного пульта — отдельным zip, без программ и панелей. */
+async function downloadSchematicsZip(pult) {
+  if (!canDownload()) {
+    alert('Сначала заполните обязательные данные для скачивания (вкладка «Скачать»).');
+    return;
+  }
+  const list = (SITE.schematics || []).filter(s => s && s.file && s.file.path &&
+    (s.pult || '—') === pult);
+  if (!list.length) { alert('У пульта «' + pult + '» нет файлов схем.'); return; }
+  try {
+    const files = [];
+    const used = new Set();
+    for (const s of list) {
+      const buf = await GH.fileBytes(s.file.path);
+      let name = s.file.name || s.file.path.split('/').pop();
+      if (used.has(name)) name = (s.program ? s.program + '_' : '') + name;
+      while (used.has(name)) name = '_' + name;
+      used.add(name);
+      files.push({ name, data: new Uint8Array(buf) });
+    }
+    const blob = await Zip.build(files);
+    const obj = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = obj;
+    a.download = 'СХЕМЫ_' + pult.replace(/[\\/:*?"<>|]/g, '_') + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(obj), 60000);
+    logDownload('схемы ' + pult + ' (zip, ' + files.length + ' шт.)');
+  } catch (e) {
+    alert('Не удалось собрать архив схем: ' + e.message);
   }
 }
 
@@ -487,6 +539,8 @@ function boot() {
   $('#btn-logout').addEventListener('click', logout);
   document.querySelectorAll('.tab').forEach(b =>
     b.addEventListener('click', () => showTab(b.dataset.tab)));
+  document.querySelectorAll('[data-goto]').forEach(b =>
+    b.addEventListener('click', () => showTab(b.dataset.goto)));
 
   $('#dl-purpose').addEventListener('change', updateGuard);
   $('#dl-factory').addEventListener('input', updateGuard);

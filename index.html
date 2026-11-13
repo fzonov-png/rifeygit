@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#2563eb">
 <title>RifeyGit — программы и схемы ПЛК</title>
-<link rel="stylesheet" href="style.css?v=15">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
@@ -26,7 +26,8 @@
     </span>
     <nav id="tabs">
       <button data-tab="download" class="tab active">Скачать</button>
-      <button data-tab="programs" class="tab">Программы и схемы</button>
+      <button data-tab="programs" class="tab">Программы</button>
+      <button data-tab="schematics" class="tab">Схемы</button>
       <button data-tab="equipment" class="tab">Реестр</button>
       <button data-tab="users" class="tab" id="tab-users" hidden>Пользователи</button>
       <button data-tab="upload" class="tab" id="tab-upload" hidden>Загрузка версий</button>
@@ -76,14 +77,24 @@
       </div>
       <datalist id="eq-list"></datalist>
       <div id="dl-programs"></div>
+      <div class="row">
+        <button type="button" class="btn ghost" data-goto="schematics">
+          Электрические схемы пультов &rarr;
+        </button>
+      </div>
     </section>
 
-    <!-- ВКЛАДКА «ПРОГРАММЫ И СХЕМЫ» -->
+    <!-- ВКЛАДКА «ПРОГРАММЫ» -->
     <section id="tabpanel-programs" class="panel" hidden>
       <p id="pg-lock" class="hint" hidden>Скачивание доступно после заполнения обязательных данных
         (заводской № объекта и назначение) на вкладке «Скачать».</p>
       <div id="pg-programs"></div>
-      <h2 class="section">Принципиальные электрические схемы пультов</h2>
+    </section>
+
+    <!-- ВКЛАДКА «СХЕМЫ» -->
+    <section id="tabpanel-schematics" class="panel" hidden>
+      <p id="pg-lock-schem" class="hint" hidden>Скачивание доступно после заполнения обязательных данных
+        (заводской № объекта и назначение) на вкладке «Скачать».</p>
       <div id="pg-schematics"></div>
     </section>
 
@@ -203,7 +214,8 @@
 
 <datalist id="pult-list"></datalist>
 
-<script src="gh.js?v=15"></script>
-<script src="app.js?v=15"></script>
+<script src="gh.js?v=16"></script>
+<script src="zip.js?v=16"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

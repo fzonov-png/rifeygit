@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Загрузка — RifeyGit</title>
-<link rel="stylesheet" href="../style.css?v=15">
+<link rel="stylesheet" href="../style.css?v=16">
 </head>
 <body>
 <div class="screen">
@@ -47,10 +47,17 @@
     </div>
   </div>
 
+  <nav class="subnav" id="upload-nav" aria-label="Что загружаем">
+    <button type="button" data-part="programs" class="seg active">Программы</button>
+    <button type="button" data-part="schematics" class="seg">Схемы</button>
+    <button type="button" data-part="users" class="seg">Пользователи</button>
+  </nav>
+
+  <div id="part-programs">
   <div class="card">
-    <h2>Загрузка версий и схем</h2>
+    <h2>Загрузка программ</h2>
     <p class="hint">Одна версия программы ПЛК может иметь несколько версий программы панели.
-       К одному пульту можно прикрепить несколько схем.</p>
+       Электрические схемы загружаются отдельно — на вкладке «Схемы».</p>
     <ol class="hint steps">
       <li>Вставьте GitHub-токен в блоке ниже — без него загрузка не работает.</li>
       <li>Заполните поля, выберите файл и нажмите кнопку в нужном разделе.</li>
@@ -109,9 +116,11 @@
       (ПЛК + панель + все схемы пульта)</label>
     <button id="b-panels" class="primary">Загрузить панели</button>
   </div>
+  </div><!-- /part-programs -->
 
+  <div id="part-schematics" hidden>
   <div class="card">
-    <h3>3. Схемы пульта</h3>
+    <h3>Загрузка электрических схем</h3>
     <p class="hint">К одному пульту можно добавить сколько угодно схем: общие и привязанные
        к программе. Одноимённые файлы заменяются.</p>
     <div class="grid2">
@@ -125,7 +134,9 @@
       <button id="b-rekit" class="ghost">Пересобрать комплекты пульта</button>
     </div>
   </div>
+  </div><!-- /part-schematics -->
 
+  <div id="part-users" hidden>
   <div class="card">
     <h3>4. Новый пользователь</h3>    <div class="grid2">
       <label>Логин * <input id="u-login" autocapitalize="none"></label>
@@ -141,13 +152,14 @@
     </div>
     <button id="b-user" class="primary">Создать пользователя</button>
   </div>
+  </div><!-- /part-users -->
 </div>
 
 <datalist id="code-list"></datalist>
 <datalist id="pult-list"></datalist>
 
-<script src="../gh.js?v=15"></script>
-<script src="../zip.js?v=15"></script>
+<script src="../gh.js?v=16"></script>
+<script src="../zip.js?v=16"></script>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -610,9 +622,27 @@ async function createUser() {
   } catch (e) { log('Ошибка: ' + e.message, 'err'); }
 }
 
+/* ——— разделы страницы: программы / схемы / пользователи ——— */
+function showPart(name) {
+  const parts = ['programs', 'schematics', 'users'];
+  if (!parts.includes(name)) name = 'programs';
+  parts.forEach(p => {
+    const el = document.getElementById('part-' + p);
+    if (el) el.hidden = p !== name;
+  });
+  document.querySelectorAll('#upload-nav .seg').forEach(b =>
+    b.classList.toggle('active', b.dataset.part === name));
+  const url = location.pathname + location.search +
+    (name === 'programs' ? '' : '#' + name);
+  history.replaceState(null, '', url);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('#upload-nav .seg').forEach(b =>
+  b.addEventListener('click', () => showPart(b.dataset.part)));
+
 /* ——— кнопки ——— */
 if (DENIED) {
-  document.querySelectorAll('.screen > .card, .screen > .status-card')
+  document.querySelectorAll('.screen > .card, .screen > .status-card, .screen > .subnav')
     .forEach(el => { el.hidden = true; });
   $('#denied-card').hidden = false;
   $('#denied-who').textContent = USER
@@ -650,6 +680,9 @@ $('#b-user').addEventListener('click', () => busy('b-user', 'Создаю…', c
 $('#u-token').value = GH.token();
 tokenUI();
 if (!GH.hasToken()) $('#token-box').open = true;
+const hashPart = location.hash.replace('#', '');
+showPart(hashPart === 'schem' || hashPart === 'schematics' ? 'schematics'
+  : hashPart === 'users' ? 'users' : 'programs');
 reload();
 }
 </script>
