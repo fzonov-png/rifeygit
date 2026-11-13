@@ -12,7 +12,7 @@
  */
 'use strict';
 
-const APP_VERSION = '16';
+const APP_VERSION = '17';
 
 /* ---------- утилиты ---------- */
 const $ = sel => document.querySelector(sel);
@@ -27,7 +27,7 @@ async function sha256hex(text) {
 const nowISO = () => new Date().toISOString().slice(0, 19);
 
 /* ---------- состояние ---------- */
-let SITE = null;            // data/site.json
+let SITE = { programs: [], schematics: [], equipment: [] };   // data/site.json
 let USER = null;            // {login, role, full_name}
 const isEngineer = () => USER && (USER.role === 'admin' || USER.role === 'engineer');
 
