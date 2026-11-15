@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-13T02:58:45",
+  "updated": "2026-11-15T13:19:04",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -61,6 +61,29 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "code": "PU_BZ_3.5",
+      "name": "PU_BZ_3.5",
+      "target": "",
+      "plant_type": "Бетонный завод",
+      "description": "",
+      "deleted": false,
+      "versions": [
+        {
+          "version": "3.5",
+          "pult": "ПУ-БЗ",
+          "message": "без описания",
+          "author": "Инженер-программист",
+          "created_at": "2026-11-15T13:19:04",
+          "plc": {
+            "path": "data/files/programs/PU_BZ_3.5/ПУ-БЗ/3.5/plc_PU_BZ_ver 3.9.isp",
+            "name": "PU_BZ_ver 3.9.isp",
+            "size": 41834
+          },
+          "panels": []
         }
       ]
     }
