@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-15T13:19:04",
+  "updated": "2026-11-15T13:19:41",
   "pults": [
     "ПУ-БЗ",
     "ПУ-Б2-М",
@@ -83,7 +83,25 @@
             "name": "PU_BZ_ver 3.9.isp",
             "size": 41834
           },
-          "panels": []
+          "panels": [
+            {
+              "version": "8072",
+              "hmi_type": "8072",
+              "message": "",
+              "author": "Инженер-программист",
+              "created_at": "2026-11-15T13:19:40",
+              "file": {
+                "path": "data/files/programs/PU_BZ_3.5/ПУ-БЗ/3.5/hmi_PU_BZ_ver 3.5 для 8072.emtp",
+                "name": "PU_BZ_ver 3.5 для 8072.emtp",
+                "size": 7438054
+              },
+              "kit": {
+                "path": "data/files/programs/PU_BZ_3.5/ПУ-БЗ/3.5/PU_BZ_3.5_3.5_8072_ПУ-БЗ.zip",
+                "name": "PU_BZ_3.5_3.5_8072_ПУ-БЗ.zip",
+                "size": 7480156
+              }
+            }
+          ]
         }
       ]
     }
